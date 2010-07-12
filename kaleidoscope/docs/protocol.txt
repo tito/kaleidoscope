@@ -1,0 +1,41 @@
+
+Auth part (no password.)
+
+========================
+
+cli -> srv
+
+LOGIN <login>
+1. OK
+2. FAILED <reason>
+
+========================
+
+srv -> cli
+
+NOTIFY <message>
+
+========================
+
+cli -> srv
+
+DOWNLOAD <filename>
+
+1. OK <MD5> <LENGTH>
++ data
+2. FAILED <reason>
+
+========================
+
+srv -> cli
+
+SCNLOAD <scenarioname>
+
+========================
+
+srv -> cli
+
+SCNSYNC
+
+1. WAIT
+2. OK
