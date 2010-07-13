@@ -5,12 +5,21 @@ from pymt import *
 from pymt.parser import parse_color
 from random import random, randint
 from OpenGL.GL import *
+from penta_color import *
+
+# local
+from penta_color import *
 
 css_add_sheet('''
 pentaminoassembled,
 pentaminosquare {
     draw-background: 1;
     bg-color: rgb(255, 255, 255);
+}
+
+pentalistcontainer {
+    draw-background: 1;
+    bg-color: rgb(80, 80, 80);
 }
 
 .pentabtn {
@@ -27,108 +36,68 @@ pentaminosquare {
 }
 ''')
 
-myriad_fontname = os.path.join(os.path.dirname(__file__), 'resources', 'myriad.ttf')
+myriad_fontname = os.path.join(os.path.dirname(__file__), 'myriad.ttf')
 
 SQUARE = 75
 SQUARE_M = 5
 
-pentaminos_database = {
-    'L': (
-        ((4, 2), '1...1111'),
-        ((4, 2), '1111...1'),
-        ((2, 4), '111.1.1.'),
-        ((2, 4), '.1.1.111'),
-        # mirror
-        ((4, 2), '11111...'),
-        ((4, 2), '...11111'),
-        ((2, 4), '1.1.1.11'),
-        ((2, 4), '11.1.1.1'),
-    ),
-    'T': (
-        ((3, 3), '1..1111..'),
-        ((3, 3), '..1111..1'),
-        ((3, 3), '.1..1.111'),
-        ((3, 3), '111.1..1.'),
-    ),
-    'V': (
-        ((3, 3), '1111..1..'),
-        ((3, 3), '..1..1111'),
-        ((3, 3), '1..1..111'),
-        ((3, 3), '111..1..1'),
-    ),
-    'N': (
-        ((4, 2), '..11111.'),
-        ((4, 2), '.11111..'),
-        ((2, 4), '1.11.1.1'),
-        ((2, 4), '1.1.11.1'),
-        # mirror
-        ((4, 2), '11...111'),
-        ((4, 2), '111...11'),
-        ((2, 4), '.1111.1.'),
-        ((2, 4), '.1.1111.'),
-    ),
-    'F': (
-        ((3, 3), '.1.11..11'),
-        ((3, 3), '11..11.1.'),
-        ((3, 3), '..1111.1.'),
-        ((3, 3), '.1.1111..'),
-        # mirror
-        ((3, 3), '.1..1111.'),
-        ((3, 3), '.1111..1.'),
-        ((3, 3), '1..111.1.'),
-        ((3, 3), '.1.111..1'),
-    ),
-    'X': (
-        ((3, 3), '.1.111.1.'),
-    ),
-    'W': (
-        ((3, 3), '..1.1111.'),
-        ((3, 3), '.1111.1..'),
-        ((3, 3), '1..11..11'),
-        ((3, 3), '11..11..1'),
-    ),
-    'I': (
-        ((5, 1), '11111'),
-        ((1, 5), '11111'),
-    ),
-    'Y': (
-        ((4, 2), '.1..1111'),
-        ((4, 2), '1111..1.'),
-        ((2, 4), '.1.111.1'),
-        ((2, 4), '1.111.1.'),
-        # mirror
-        ((4, 2), '..1.1111'),
-        ((4, 2), '1111.1..'),
-        ((2, 4), '1.1.111.'),
-        ((2, 4), '.111.1.1'),
-    ),
-    'U': (
-        ((3, 2), '1.1111'),
-        ((3, 2), '1111.1'),
-        ((2, 3), '11.111'),
-        ((2, 3), '111.11'),
-    ),
-    'P': (
-        ((2, 3), '1.1111'),
-        ((2, 3), '1111.1'),
-        ((3, 2), '.11111'),
-        ((3, 2), '11111.'),
-        # mirror
-        ((2, 3), '.11111'),
-        ((2, 3), '11111.'),
-        ((3, 2), '111.11'),
-        ((3, 2), '11.111'),
-    ),
-    'Z': (
-        ((3, 3), '..11111..'),
-        ((3, 3), '1..111..1'),
-        ((3, 3), '11..1..11'),
-        ((3, 3), '.11.1.11.'),
-    ),
-}
+class PentaContainer(MTWidget):
+    def __init__(self, **kwargs):
+        super(PentaContainer, self).__init__(**kwargs)
+        self.string = None
+        self.pw = 0
+        self.ph = 0
+        self.pentak = ''
+        self.color = None
+
+    def draw(self):
+        if not self.string:
+            return
+
+        if self.color is None:
+            self.color = parse_color(penta_colors[self.pentak])
+
+        step = self.width / 7
+        ox, oy = self.pos
+
+        set_color(*self.color)
+        size = (step, step)
+        pw = self.pw
+        ph = self.ph
+        s = self.string
+        ox += step + (step * (5 - pw)) / 2.
+        oy += step + (step * (5 - ph)) / 2.
+        for ix in xrange(pw):
+            for iy in xrange(ph):
+                if s[iy * pw + ix] != '1':
+                    continue
+                x = ix * (step + 1)
+                y = iy * (step + 1)
+                drawRectangle(pos=(ox + x, oy + y), size=size)
+
+class PentaListContainer(MTBoxLayout):
+    def __init__(self, **kwargs):
+        kwargs.setdefault('orientation', 'horizontal')
+        kwargs.setdefault('invert', True)
+        kwargs.setdefault('size_hint', (1, None))
+        w, h = getWindow().size
+        h = w / 12
+        kwargs.setdefault('height', h)
+        kwargs.setdefault('pos', (0, getWindow().height - h))
+        super(PentaListContainer, self).__init__(**kwargs)
+        for x in xrange(12):
+            self.add_widget(PentaContainer(size=(h, h)))
+        self.idx = 0
+
+    def add_penta(self, k, penta, w, h):
+        self.children[self.idx].pentak = k
+        self.children[self.idx].string = penta
+        self.children[self.idx].pw = w
+        self.children[self.idx].ph = h
+        self.idx += 1
 
 class PentaminoAssembled(MTScatter):
-    def __init__(self, key, pw, ph, string, playername, playercolor, **kwargs):
+    def __init__(self, key, pw, ph, string, **kwargs):
         kwargs.setdefault('do_scale', False)
         kwargs.setdefault('size', map(lambda x: int(x) * (SQUARE + SQUARE_M) - SQUARE_M, (pw, ph)))
         super(PentaminoAssembled, self).__init__(**kwargs)
@@ -137,8 +106,7 @@ class PentaminoAssembled(MTScatter):
         self.pw = int(pw)
         self.ph = int(ph)
         self.key = key
-        self.playername = playername
-        self.playercolor = parse_color(playercolor)
+        self.color = parse_color(penta_colors[key])
         self.highlight = None
 
     def turn_left(self, coords, orientation):
@@ -249,7 +217,7 @@ class PentaminoAssembled(MTScatter):
         return True
 
     def draw(self):
-        set_color(*self.playercolor)
+        set_color(*self.color)
         size = (SQUARE, SQUARE)
         pw = self.pw
         ph = self.ph
@@ -310,6 +278,7 @@ class PentaminosContainer(MTWidget):
         gw, gh = self.client.gridsize
         self.reset()
         self.last_msg = ''
+        self.done = []
 
     def reset(self):
         self.children.clear()
@@ -464,7 +433,7 @@ class PentaminosContainer(MTWidget):
 
     def search_pentamino(self, penta, w, h):
         penta_size = (w, h)
-        for k, possibilities in pentaminos_database.iteritems():
+        for k, possibilities in penta_schemes.iteritems():
             for d_size, d_penta in possibilities:
                 if penta_size != d_size:
                     continue
@@ -475,8 +444,23 @@ class PentaminosContainer(MTWidget):
 
     def on_update(self):
         super(PentaminosContainer, self).on_update()
+        if self.client.gametype == 'game1':
+            self.check_grid_pentamino()
+
+    def check_grid_pentamino(self):
         k = self.is_pentamino()
-        self.client.activate(k is not None, label='Send %s' % k)
+        if not k:
+            return
+        if k in self.done:
+            # TODO do an error
+            return
+        # add to our list
+        penta, w, h = self.client.pcontainer.get_pentamino()
+        self.client.lcontainer.add_penta(k, penta, w, h)
+        self.done.append(k)
+        # send to server
+        self.client.send('PENTAMINO %s %d %d %s' % (k, w, h, penta))
+        self.client.pcontainer.reset()
 
     def on_draw(self):
         '''Hack to be able to draw children ok + highlight + children moving
@@ -525,9 +509,9 @@ class PentaminosContainer(MTWidget):
                 if ix < 0 or ix >= gw or iy < 0 or iy >= gh:
                     continue
                 if grid[ix][iy] is None:
-                    set_color(.5, .5, .5, .4)
+                    set_color(.9, .9, .9)
                 else:
-                    set_color(1, .2, .2, .4)
+                    set_color(1, .2, .2)
                 drawRectangle(pos=(mx + ix * step, my + iy * step), size=s)
 
 
@@ -541,46 +525,52 @@ class PentaminosClient(KalScenarioClient):
         self.count = 0
         self.gridsize = 0, 0
         self.last_msg = ''
-        self.validation = MTButton(label='Send', pos=(100, 100), visible=False,
-                                   size=(200, 100), cls='pentabtn')
-        self.validation.connect('on_release', self.send_pentamino)
+        self.gametype = 'none'
 
-    def activate(self, a=False, label='Send'):
-        self.validation.label = label
-        self.validation.visible = a
-
-    def send_pentamino(self, *largs):
-        k = self.pcontainer.is_pentamino()
-        if k:
-            penta, w, h = self.pcontainer.get_pentamino()
-            self.send('PENTAMINO %s %d %d %s' % (k, w, h, penta))
-        self.activate(False)
+    def handle_clear(self, args):
+        self.pcontainer.reset()
 
     def handle_penta(self, args):
         c = args.split()
-        key, w, h, string, playername, playercolor = c
+        key, w, h, string = c
         r = randint(0, 3) * 90
         y = self.pcontainer.height - 200
         x = 100 + random() * (self.pcontainer.width - 200)
-        p = PentaminoAssembled(key, w, h, string, playername, playercolor,
+        p = PentaminoAssembled(key, w, h, string,
                           center=(x, y), rotation=r, scale=.0001)
         p.do(Delay(d=random() * 1) + Animation(scale=1, f='ease_out_elastic', d=1))
         self.pcontainer.add_widget(p)
 
-    def handle_clear(self, args):
-        self.activate(False)
-        self.pcontainer.reset()
-
     def handle_size(self, args):
         self.gridsize = map(int, args.split())
+        if hasattr(self, 'pcontainer'):
+            self.pcontainer.reset()
 
     def handle_msg(self, message):
         self.last_msg = message
 
-    def handle_start(self, args):
+    def handle_beready(self, message):
+        btn = MTButton(label='I am ready', cls=['pentabtn', 'ready'],
+                size=(200, 100))
+        anchor = MTAnchorLayout(size=self.container.size)
+        anchor.add_widget(btn)
+        self.container.add_widget(anchor)
+
+        def on_ready(*l):
+            self.send('READY')
+            self.container.remove_widget(anchor)
+        btn.connect('on_release', on_ready)
+
+    def handle_game1(self, args):
+        self.gametype = 'game1'
         self.pcontainer = PentaminosContainer(self, size=getWindow().size)
+        self.lcontainer = PentaListContainer()
+        self.container.add_widget(self.lcontainer)
         self.container.add_widget(self.pcontainer)
-        self.container.add_widget(self.validation)
+
+    def handle_game2(self, args):
+        self.gametype = 'game2'
+        self.container.remove_widget(self.lcontainer)
 
     def handle_give(self, args):
         l = int(args)

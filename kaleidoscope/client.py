@@ -1,7 +1,55 @@
 import time
 import asyncore, asynchat
 import socket
+import os, errno
+import hashlib
+import base64
 from pymt import *
+import traceback
+
+class KalCache(object):
+    directory = os.path.join(os.path.dirname(__file__), 'cache')
+
+    @staticmethod
+    def create(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST:
+                pass
+            else:
+                raise
+
+        filename = os.path.join(directory, '__init__.py')
+        if not os.path.exists(filename):
+            with open(filename, 'w') as fd:
+                fd.write('')
+
+    @staticmethod
+    def init():
+        KalCache.create(KalCache.directory)
+
+    @staticmethod
+    def initscenario(scenarioname):
+        directory = os.path.join(KalCache.directory, scenarioname)
+        KalCache.create(directory)
+
+    @staticmethod
+    def validate(scenarioname, resource, sha):
+        filename = os.path.join(KalCache.directory, scenarioname, resource)
+        if not os.path.exists(filename):
+            return False
+        with open(filename, 'rb') as fd:
+            hash = hashlib.sha224(fd.read()).hexdigest()
+        return sha == hash
+
+    @staticmethod
+    def write(scenarioname, resource, data):
+        filename = os.path.join(KalCache.directory, scenarioname, resource)
+        KalCache.initscenario(scenarioname)
+
+        with open(filename, 'wb') as fd:
+            fd.write(data)
 
 class KalClientChannel(asynchat.async_chat):
     def __init__(self, server, sock, addr, ui):
@@ -13,6 +61,8 @@ class KalClientChannel(asynchat.async_chat):
         self.scenario = None
         self.scenarioname = ''
         self.ui = ui
+        self.require = 0
+        KalCache.init()
 
     def collect_incoming_data(self, data):
         self.data = self.data + data
@@ -36,8 +86,8 @@ class KalClientChannel(asynchat.async_chat):
         try:
             func = getattr(self, 'handle_%s' % cmd.lower())
             func(args)
-        except Exception, e:
-            print e
+        except:
+            traceback.print_exc()
             #self.failed(client, 'Invalid command <%s>' % cmd.lower())
 
     def handle_ok(self, args):
@@ -49,21 +99,39 @@ class KalClientChannel(asynchat.async_chat):
     def handle_notify(self, args):
         self.ui.dispatch_event('on_notify', args)
 
-    def handle_scnload(self, args):
-        self.ui.dispatch_event('on_scnload', args)
-        self.push('STATUS loading\n')
-        try:
-            self.scenarioname = args
-            pack = __import__('kaleidoscope.scenarios.%s' % self.scenarioname,
-                              fromlist=['client'])
-            self.scenario = pack.client.scenario_class(self)
-        except Exception, e:
-            self.push('STATUS failed <%s>\n' % e)
-            raise
-        self.push('STATUS ok\n')
+    def handle_load(self, args):
+        self.ui.dispatch_event('on_load', args)
+        self.push('STATUS wait requirement\n')
 
     def handle_game(self, args):
         self.scenario.update_server(args)
+
+    def handle_require(self, args):
+        scenarioname, filename, hash = args.split()
+        if not KalCache.validate(scenarioname, filename, hash):
+            self.push('GET %s %s\n' % (scenarioname, filename))
+            self.require += 1
+
+    def handle_write(self, args):
+        scenarioname, filename, data = args.split()
+        data = base64.urlsafe_b64decode(data)
+        KalCache.write(scenarioname, filename, data)
+        self.require -= 1
+
+    def handle_sync(self, args):
+        if self.require != 0:
+            self.push('STATUS still %s files to download\n' % self.require)
+        else:
+            self.push('STATUS loading\n')
+            try:
+                self.scenarioname = args
+                pack = __import__('kaleidoscope.cache.%s' % self.scenarioname,
+                                  fromlist=['client'])
+                self.scenario = pack.client.scenario_class(self)
+            except Exception, e:
+                self.push('STATUS failed <%s>\n' % e)
+                raise
+            self.push('STATUS ok\n')
 
     def handle_error(self):
         print '<<<<<<<<<<<<<<<<<<<<<< ERROR'
@@ -94,7 +162,7 @@ class KalClientInteractive(MTWidget):
         self.register_event_type('on_ok')
         self.register_event_type('on_failed')
         self.register_event_type('on_notify')
-        self.register_event_type('on_scnload')
+        self.register_event_type('on_load')
 
         self.client = KalClient(self.ip, self.port, self)
         self.logged = False
@@ -123,7 +191,7 @@ class KalClientInteractive(MTWidget):
             self.history = self.history[1:]
         pymt_logger.info('Kal: %s' % args)
 
-    def on_scnload(self, args):
+    def on_load(self, args):
         pass
 
     def draw(self):

@@ -2,10 +2,13 @@
 Kaleidoscope - Server
 '''
 
+import sys
+import traceback
 from kaleidoscope import config
 import asyncore, asynchat
 import os, socket, string
 from time import time
+import base64
 
 class KalGameControler(object):
     def __init__(self, controler):
@@ -68,24 +71,39 @@ class KalGameControler(object):
             self.controler.notify_all('Game will start in %ds' % left)
             self.lastcountdown = left
         if left <= 0:
-            self.state = 'scnload'
+            self.state = 'load'
 
-    def handle_scnload(self):
-        # load the scenario
+    def handle_load(self):
+        '''Load a scenario.
+        Ensure that we don't have any older scenario imported
+        This is required to be able to reload the module without
+        restarting the server
+        '''
         try:
-            pack = __import__('kaleidoscope.scenarios.%s' % self.scenarioname, fromlist=['server'])
+            package = 'kaleidoscope.scenarios.%s' % self.scenarioname
+            for x in sys.modules.keys()[:]:
+                if x.startswith(package):
+                    del sys.modules[x]
+
+            pack = __import__(package, fromlist=['server'])
             self.scenario = pack.server.scenario_class(self)
-            self.controler.send_all('SCNLOAD %s\n' % self.scenarioname)
+            self.controler.send_all('LOAD %s\n' % self.scenarioname)
+
+            # ask to every client if they have the latest version
+            for x in self.scenario.resources:
+                # calculate md5 of the resource
+                self.controler.send_all('REQUIRE %s %s %s\n' % (
+                    self.scenarioname, x, self.scenario.sha224(x)))
+
         except Exception, e:
             self.controler.notify_all('Server error while trying to load scenario')
             self.controler.notify_all('Game cancelled.')
             self.state = 'idle'
-            import traceback
             traceback.print_exc()
             return
-        self.state = 'scnwait'
+        self.state = 'sync'
 
-    def handle_scnwait(self):
+    def handle_sync(self):
         name = self.controler.get_client_name
         allsync = True
         for cli in self.controler.clients:
@@ -101,12 +119,13 @@ class KalGameControler(object):
         if allsync:
             print '# Starting !'
             self.state = 'running'
+        else:
+            self.controler.send_all('SYNC %s\n' % self.scenarioname)
 
     def handle_running(self):
         try:
             self.scenario.update()
         except:
-            import traceback
             traceback.print_exc()
 
 
@@ -176,6 +195,7 @@ class KalControler(object):
             func(client, args)
         except Exception, e:
             self.failed(client, 'Invalid command <%s>' % cmd.lower())
+            traceback.print_exc()
 
     def handle_login(self, client, args):
         '''Subscribe to the game, if possible.
@@ -191,14 +211,24 @@ class KalControler(object):
     def handle_logout(self, client, args):
         if client not in self.clients:
             return
+        clientname = self.clients[client]
         del self.clients[client]
-        self.notify_all('@%s leave the game' % args)
+        self.notify_all('@%s leave the game' % clientname)
 
     def handle_status(self, client, args):
         self.game.update_client_status(client, args)
 
     def handle_game(self, client, args):
         self.game.client_receive(client, args)
+
+    def handle_get(self, client, args):
+        scenarioname, filename = args.split()
+        if scenarioname != self.game.scenarioname:
+            self.failed(client, 'Invalid scenario name for GET')
+            return
+        data = self.game.scenario.get(filename)
+        data = base64.urlsafe_b64encode(data)
+        self.send_to(client, 'WRITE %s %s %s\n' % (scenarioname, filename, data))
 
 
 class KalServerChannel(asynchat.async_chat):
