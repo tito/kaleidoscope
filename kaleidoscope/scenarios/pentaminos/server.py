@@ -171,5 +171,6 @@ class Pentaminos(KalScenarioServer):
         if time() < self.timeout:
             return
         self.controler.game.switch_scenario('choose')
+        self.controler.game.load_all()
 
 scenario_class = Pentaminos

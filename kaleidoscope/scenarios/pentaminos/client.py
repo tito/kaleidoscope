@@ -116,6 +116,7 @@ class PentaminoAssembled(MTScatter):
         self.color = parse_color(penta_colors[key])
         self.highlight = None
         self.fit = False
+        self.touchorig = (0, 0)
 
     def turn_left(self, coords, orientation):
         if orientation == 0:
@@ -177,12 +178,28 @@ class PentaminoAssembled(MTScatter):
         self.highlight = result
         return result
 
+    def reverse(self):
+        s = self.string[:]
+        out = []
+        pw = self.pw
+        ph = self.ph
+        s = self.string
+        for iy in range(ph-1, -1, -1):
+            out.append(s[iy * pw:(iy+1) * pw])
+        print self.pw, self.ph, self.string, '=>', ''.join(out)
+        self.string = ''.join(out)
+
+
     def on_touch_down(self, touch):
         '''Remove the square in the grid if exist
         '''
         if super(PentaminoAssembled, self).on_touch_down(touch):
             self.parent.remove_square(self)
+            if touch.is_double_tap:
+                self.reverse()
             self.do(Animation(scale=1., d=.2, f='ease_out_cubic'))
+            if len(self._touches) == 1:
+                self.touchorig = self.pos
             return True
         return False
 
@@ -205,6 +222,8 @@ class PentaminoAssembled(MTScatter):
         #rot = self.rotation - self.rotation % 90
         self.do(Animation(rotation=rot,
                           d=.1, f='ease_out_cubic'))
+        if len(self._touches) != 0:
+            return
         # ensure that all coords fit in the grid
         fit = True
         coords = self.check_from(touch.x, touch.y, rot)
@@ -231,7 +250,7 @@ class PentaminoAssembled(MTScatter):
         elif len(self._touches) == 0:
             x = self.x
             if x < self.parent.width / 2.:
-                x = self.parent.width - 150 - 350 * random()
+                x = self.touchorig[0]
             self.do(Animation(scale=0.4,
                               x=x,
                               d=.2, f='ease_out_cubic'))

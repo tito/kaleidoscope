@@ -82,7 +82,13 @@ class KalGameControler(object):
             return
         self.state = 'running'
 
+    def load_all(self):
+        for client in self.controler.clients:
+            self.load(client)
+
     def load(self, client):
+        if client in self.status:
+            del self.status[client]
         if self.state == 'idle':
             self.handle_load()
         try:
