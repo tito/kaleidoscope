@@ -154,7 +154,7 @@ class KalClientInteractive(MTWidget):
     def __init__(self, **kwargs):
         super(KalClientInteractive, self).__init__(**kwargs)
         self.nickname = kwargs.get('nickname', 'jubei')
-        self.ip = kwargs.get('ip', '127.0.0.1');
+        self.ip = kwargs.get('host', '127.0.0.1');
         self.port = kwargs.get('port', 6464)
         self.container = MTWidget(size=self.size)
         self.add_widget(self.container)
