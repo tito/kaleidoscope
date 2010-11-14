@@ -3,6 +3,7 @@ from time import time
 from random import randint
 from penta_color import penta_schemes
 
+TIMER = 60 * 2
 PENTAMINOS_SIZE = 5, 3
 PENTAMINOS_SIZE2 = 6, 5
 PENTAMINOS_COUNT_BY_USERS = 3
@@ -21,6 +22,7 @@ class Pentaminos(KalScenarioServer):
     def __init__(self, *largs):
         super(Pentaminos, self).__init__(*largs)
         self.timeout = 0
+        self.timemsg = 0
         self.players = {}
 
         # init client table
@@ -92,7 +94,9 @@ class Pentaminos(KalScenarioServer):
         if not ready:
             return
 
+        self.timeout = time() + TIMER
         self.msg_all('Construit %d pentaminos' % PENTAMINOS_COUNT_BY_USERS)
+        self.send_all('TIME %d' % int(self.timeout))
         self.send_all('SIZE %d %d' % PENTAMINOS_SIZE)
         self.send_all('GAME1')
         self.send_all('GIVE 5')
@@ -102,12 +106,21 @@ class Pentaminos(KalScenarioServer):
     def run_game1(self):
         '''Game is running
         '''
+        if time() > self.timeout:
+            self.state = 'reset_for_game2'
+            return
         done = True
         for player in self.players.itervalues():
             if len(player['pentaminos']) != PENTAMINOS_COUNT_BY_USERS:
                 done = False
         if done:
-            print '# All users have finished game1'
+            self.msg_all('Tout le monde a fini, on commence la seconde partie..')
+            self.state = 'game1_wait'
+            self.timeout = time() + 2
+            self.send_all('TIME %d' % int(self.timeout))
+
+    def run_game1_wait(self):
+        if time() > self.timeout:
             self.state = 'reset_for_game2'
 
     def run_reset_for_game2(self):
@@ -133,7 +146,30 @@ class Pentaminos(KalScenarioServer):
             self.send_all('PENTA %s %d %d %s' % (
                 k, w, h, string))
 
+        self.timeout = time() + TIMER
+        self.send_all('TIME %d' % int(self.timeout))
+
     def run_game2(self):
-        pass
+        if time() > self.timeout:
+            self.msg_all('Fin du jeu !')
+            self.state = 'game3'
+            self.timeout = time() + 5
+            self.send_all('TIME %d' % int(self.timeout))
+            return
+
+        done = True
+        for player in self.players.itervalues():
+            if not player['done']:
+                done = False
+        if done:
+            self.msg_all('Bravo, tout le monde a fini !')
+            self.state = 'game3'
+            self.timeout = time() + 5
+            self.send_all('TIME %d' % int(self.timeout))
+
+    def run_game3(self):
+        if time() < self.timeout:
+            return
+        self.controler.game.switch_scenario('choose')
 
 scenario_class = Pentaminos

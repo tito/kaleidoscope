@@ -1,4 +1,5 @@
 from os.path import join, dirname
+from time import time
 from kaleidoscope.scenario import KalScenarioClient
 from pymt import *
 from pymt.parser import parse_color
@@ -606,9 +607,15 @@ class PentaminosClient(KalScenarioClient):
         self.gridsize = 0, 0
         self.last_msg = ''
         self.gametype = 'none'
+        self.timeout = 0
+        self.timeoutl = .1
 
     def handle_clear(self, args):
         self.pcontainer.reset()
+
+    def handle_time(self, args):
+        self.timeout = int(args)
+        self.timeoutl = self.timeout - time()
 
     def handle_penta(self, args):
         c = args.split()
@@ -711,6 +718,15 @@ class PentaminosClient(KalScenarioClient):
                   font_name=myriad_fontname,
                   color=self.current_text_color,
                   font_size=24)
+
+        # draw little timer
+        pos = 50, 50
+        r = 25
+        set_color(1)
+        drawCircle(pos=pos, radius=r)
+        set_color(.4588, .7098, .2784)
+        d = max(0, 1 - ((self.timeout - time()) / self.timeoutl))
+        drawSemiCircle(pos, 0, r, sweep_angle=360 * d)
 
 
 scenario_class = PentaminosClient
