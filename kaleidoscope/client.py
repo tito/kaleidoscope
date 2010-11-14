@@ -163,8 +163,6 @@ class KalClientInteractive(MTWidget):
         self.nickname = kwargs.get('nickname', 'jubei')
         self.ip = kwargs.get('host', '127.0.0.1');
         self.port = kwargs.get('port', 6464)
-        self.container = MTWidget(size=self.size)
-        self.add_widget(self.container)
 
         self.register_event_type('on_ok')
         self.register_event_type('on_failed')
@@ -193,7 +191,7 @@ class KalClientInteractive(MTWidget):
         pass
 
     def on_reset(self):
-        self.container.children = []
+        self.children = []
 
     def on_notify(self, args):
         self.history.append(args)

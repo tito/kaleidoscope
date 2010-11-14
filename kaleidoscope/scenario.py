@@ -85,7 +85,7 @@ class KalScenarioClient(object):
         super(KalScenarioClient, self).__init__()
         self.controler = controler
         self.ui = self.controler.ui
-        self.container = self.ui.container
+        self.container = self.ui
 
     def send(self, message):
         self.controler.push('GAME %s\n' % message)
