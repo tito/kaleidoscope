@@ -192,7 +192,7 @@ class KalClientInteractive(MTWidget):
         pass
 
     def on_reset(self):
-        self.children.clear()
+        self.children = []
 
     def on_notify(self, args):
         self.history.append(args)

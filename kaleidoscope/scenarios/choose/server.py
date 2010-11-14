@@ -104,7 +104,7 @@ class Choose(KalScenarioServer):
         if self.controler.waitclients:
             for client in self.controler.waitclients:
                 self.controler.clients[client] = self.controler.waitclients[client]
-                self.client_login(client)
+                self.controler.game.load(client)
             self.controler.waitclients = {}
         if len(self.players) < 1:
             return
