@@ -118,7 +118,7 @@ class ChooseClient(KalScenarioClient):
         cx, cy = getWindow().center
         self.container.children = []
         self.container.add_widget(
-            MTLabel(label='Attends les autres joueurs',
+            MTLabel(label=u'Cliquez une fois que tous les joueurs ont une place',
                     cls='font', anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),

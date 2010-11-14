@@ -103,6 +103,11 @@ class KalClientChannel(asynchat.async_chat):
         self.ui.dispatch_event('on_load', args)
         self.push('STATUS wait requirement\n')
 
+    def handle_reset(self, args):
+        self.ui.dispatch_event('on_reset')
+        self.scenarioname = ''
+        self.scenario = None
+
     def handle_game(self, args):
         self.scenario.update_server(args)
 
@@ -186,6 +191,9 @@ class KalClientInteractive(MTWidget):
 
     def on_failed(self, args):
         pass
+
+    def on_reset(self):
+        self.container.children = []
 
     def on_notify(self, args):
         self.history.append(args)

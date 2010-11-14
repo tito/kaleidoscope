@@ -1,5 +1,7 @@
 from kaleidoscope.scenario import KalScenarioServer
 
+MIN_PLAYERS = 1
+
 class Choose(KalScenarioServer):
     resources = (
         'background.png',
@@ -31,6 +33,11 @@ class Choose(KalScenarioServer):
         self.send_remaining_places()
         self.send_wait()
 
+    def reset(self):
+        for infos in self.players.itervalues():
+            infos['place'] = -1
+            infos['ready'] = False
+
     def send_remaining_places(self):
         places = range(1, 5)
         for player in self.players.itervalues():
@@ -43,11 +50,14 @@ class Choose(KalScenarioServer):
             self.send_to(client, 'PLACE %s' % ' '.join(map(str, places)))
 
     def send_wait(self):
-        ready = len([x for x, z in self.players.iteritems() if z['ready']])
-        total = len(self.players)
+        ready = len([x for x, z in self.players.iteritems() if z['ready'] and
+                     z['place'] != -1])
+        total = len([x for x, z in self.players.iteritems() if z['place'] != -1])
 
-        if total < 2:
+        if total < MIN_PLAYERS:
             msg = 'Il manque un joueur pour commencer'
+            self.reset()
+            self.send_remaining_places()
         else:
             msg = 'Il reste %d joueur%s en cours de connexion' % (
                 total - ready, '' if ready <= 1 else 's')
@@ -91,15 +101,35 @@ class Choose(KalScenarioServer):
     # State machine
     #
     def run_waitready(self):
-        if len(self.players) < 1: return
-        ready = True
+        if self.controler.waitclients:
+            for client in self.controler.waitclients:
+                self.controler.clients[client] = self.controler.waitclients[client]
+                self.client_login(client)
+            self.controler.waitclients = {}
+        if len(self.players) < 1:
+            return
+        ready = 0
         for client, infos in self.players.iteritems():
-            ready = ready and infos['ready']
-        if not ready:
+            if infos['place'] == -1:
+                continue
+            if infos['ready']:
+                ready += 1
+        if ready < MIN_PLAYERS:
             return
         self.state = 'launch'
 
     def run_launch(self):
+        for client in self.players.keys()[:]:
+            infos = self.players[client]
+            if infos['place'] == -1:
+                self.client_logout(client)
+                self.controler.reset(client)
+
         self.controler.game.switch_scenario(self.selected_scenario)
+        for client in self.players.keys()[:]:
+            infos = self.players[client]
+            if infos['place'] == -1:
+                continue
+            self.controler.game.load(client)
 
 scenario_class = Choose

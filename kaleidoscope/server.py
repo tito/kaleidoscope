@@ -27,7 +27,7 @@ class KalGameControler(object):
         '''
 
         # ensure the game can go, if they are at least one client.
-        if len(self.controler.clients) == 0:
+        if len(self.controler.clients) + len(self.controler.waitclients) == 0:
             if self.state != 'idle':
                 print '# All clients have leaved, reset to idle.'
                 self.state = 'idle'
@@ -54,17 +54,16 @@ class KalGameControler(object):
         '''Default handler when nothing is done.
         Just wait for few peoples to come in the game.
         '''
-        l = len(self.controler.clients)
+        l = len(self.controler.clients) + len(self.controler.waitclients)
         if l <= 0:
             return
         self.state = 'load'
         self.clientcount = l
 
     def switch_scenario(self, scenario):
+        print '# Switch to', scenario
         self.scenarioname = scenario
         self.handle_load()
-        for client in self.controler.clients:
-            self.load(client)
 
     def handle_load(self):
         try:
@@ -98,6 +97,13 @@ class KalGameControler(object):
             return
 
     def handle_running(self):
+
+        if self.scenarioname != 'choose' and \
+           not self.controler.clients and \
+           self.controler.waitclients:
+            self.scenarioname = 'choose'
+            self.state = 'idle'
+            return
 
         # Sync part
         name = self.controler.get_client_name
@@ -139,10 +145,16 @@ class KalControler(object):
     def __init__(self):
         super(KalControler, self).__init__()
         self.clients = {}
+        self.waitclients = {}
         self.game = KalGameControler(self)
 
     def get_client_name(self, client):
         return self.clients[client]
+
+    def reset(self, client):
+        self.waitclients[client] = self.clients[client]
+        del self.clients[client]
+        self.raw(client, 'RESET\n')
 
     def tick(self):
         '''State machine of the game :)
@@ -199,23 +211,23 @@ class KalControler(object):
         '''Subscribe to the game, if possible.
         '''
         if client in self.clients:
-            return self.failed(client, 'Already subscribed')
+            return self.failed(client, 'Inscription invalide')
         if len(args) <= 2:
-            return self.failed(client, 'Invalid login')
-        self.clients[client] = args
+            return self.failed(client, 'Login invalide')
+        self.waitclients[client] = args
         self.notify_all('@%s est en ligne' % args)
         self.ok(client)
-        if self.game:
-            self.game.load(client)
+        self.send_to(client, 'NOTIFY Attente d\'acceptation...\n')
 
     def handle_logout(self, client, args):
-        if client not in self.clients:
-            return
-        clientname = self.clients[client]
-        del self.clients[client]
-        self.notify_all('@%s est parti' % clientname)
-        if self.game and self.game.scenario:
-            self.game.scenario.client_logout(client)
+        if client in self.clients:
+            clientname = self.clients[client]
+            del self.clients[client]
+            self.notify_all('@%s est parti' % clientname)
+            if self.game and self.game.scenario:
+                self.game.scenario.client_logout(client)
+        elif client in self.waitclients:
+            del self.waitclients[client]
 
     def handle_status(self, client, args):
         self.game.update_client_status(client, args)
