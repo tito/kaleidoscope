@@ -168,6 +168,7 @@ class KalClientInteractive(MTWidget):
         self.register_event_type('on_failed')
         self.register_event_type('on_notify')
         self.register_event_type('on_load')
+        self.register_event_type('on_reset')
 
         self.client = KalClient(self.ip, self.port, self)
         self.logged = False
