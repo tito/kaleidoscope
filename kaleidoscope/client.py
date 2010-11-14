@@ -117,6 +117,8 @@ class KalClientChannel(asynchat.async_chat):
         data = base64.urlsafe_b64decode(data)
         KalCache.write(scenarioname, filename, data)
         self.require -= 1
+        if self.require == 0:
+            self.handle_sync()
 
     def handle_sync(self, args):
         if self.require != 0:
