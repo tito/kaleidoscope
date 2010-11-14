@@ -1,12 +1,17 @@
+from os.path import dirname, join
 from kaleidoscope.scenario import KalScenarioServer
 from time import time
-from random import randint
 from penta_color import penta_schemes
+from OpenGL.GL import GL_REPEAT
+from pymt import *
 
 TIMER = 60 * 2
 PENTAMINOS_SIZE = 5, 3
 PENTAMINOS_SIZE2 = 6, 5
 PENTAMINOS_COUNT_BY_USERS = 3
+
+background = Image(join(dirname(__file__), 'background.png'))
+background.texture.wrap = GL_REPEAT
 
 class Pentaminos(KalScenarioServer):
     resources = (
@@ -34,6 +39,61 @@ class Pentaminos(KalScenarioServer):
                 'done': False,
                 'pentaminos': []
             }
+
+        self.init_ui()
+
+    def init_ui(self):
+        ui = self.controler.ui
+        ui.children = []
+
+        # Top
+        self.l1 = label = MTLabel(label=u'Assemblez les 5 carr\xe9s dans la grille pour'
+                        u'former un Pentamino', autowidth=True,
+                        font_size=24)
+        label.on_update()
+        self.m1 = m1 = MTScatter()
+        m1.size = label.size
+        m1.center = getWindow().center
+        m1.y -= 15
+        m1.add_widget(label)
+        ui.add_widget(m1)
+
+        # Bottom
+        self.l2 = label = MTLabel(label=u'Assemblez les 5 carr\xe9s dans la grille pour'
+                        u'former un Pentamino', autowidth=True,
+                        font_size=24)
+        label.on_update()
+        self.m2 = m1 = MTScatter(rotation=180)
+        m1.size = label.size
+        m1.center = getWindow().center
+        m1.y += 15
+        m1.add_widget(label)
+        ui.add_widget(m1)
+
+    def _set_label(self, label):
+        self.l1.label = label
+        self.l2.label = label
+        self.l1.on_update()
+        m1 = self.m1
+        m1.size = self.l1.size
+        m1.center = getWindow().center
+        m1.y += 15
+        m1 = self.m2
+        m1.size = self.l1.size
+        m1.center = getWindow().center
+        m1.y += 15
+    def _get_label(self):
+        return self.l1.label
+    label = property(_get_label, _set_label)
+
+    def draw(self):
+        set_color(1)
+        w, h = getWindow().size
+        t = list(background.texture.tex_coords)
+        t[2] = t[4] = w / float(background.width)
+        t[5] = t[7] = h / float(background.height)
+        drawTexturedRectangle(background.texture, size=getWindow().size,
+                             tex_coords=t)
 
     def client_login(self, client):
         self.players[client]['ready'] = True
@@ -148,6 +208,7 @@ class Pentaminos(KalScenarioServer):
 
         self.timeout = time() + TIMER
         self.send_all('TIME %d' % int(self.timeout))
+        self.label = 'Former un rectangle de 5x6 avec des Pentaminos'
 
     def run_game2(self):
         if time() > self.timeout:

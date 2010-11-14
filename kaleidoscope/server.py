@@ -5,6 +5,7 @@ Kaleidoscope - Server
 import sys
 import traceback
 from kaleidoscope import config
+from pymt import MTWidget, getClock
 import asyncore, asynchat
 import socket
 import base64
@@ -150,6 +151,7 @@ class KalControler(object):
 
     def __init__(self):
         super(KalControler, self).__init__()
+        self.ui = None
         self.clients = {}
         self.waitclients = {}
         self.game = KalGameControler(self)
@@ -297,14 +299,22 @@ class KalServer(asyncore.dispatcher):
         print '# Client connected', addr
         KalServerChannel(self, conn, addr)
 
-if __name__ == '__main__':
-    print '# Start Kaleidoscope server at', (config.server_ip, config.server_port)
-    s = KalServer(config.server_ip, config.server_port)
-    try:
-        while True:
-            asyncore.loop(timeout=.05, count=1)
-            KalControler.get_instance().tick()
-    except:
-        print '# Close the socket...'
-        s.close()
-        raise
+
+class KalServerInteractive(MTWidget):
+    def __init__(self, **kwargs):
+        super(KalServerInteractive, self).__init__(**kwargs)
+        self.controler = KalControler.get_instance()
+        self.controler.ui = self
+
+        print '# Start Kaleidoscope server at', (config.server_ip, config.server_port)
+        self.server = KalServer(config.server_ip, config.server_port)
+        getClock().schedule_interval(self.update_loop, 0)
+
+    def update_loop(self, *l):
+        asyncore.loop(timeout=0, count=1)
+        KalControler.get_instance().tick()
+
+    def on_draw(self):
+        if self.controler.game.scenario:
+            self.controler.game.scenario.draw()
+        super(KalServerInteractive, self).on_draw()

@@ -1,6 +1,12 @@
+from os.path import dirname, join
 from kaleidoscope.scenario import KalScenarioServer
+from OpenGL.GL import GL_REPEAT
+from pymt import *
 
 MIN_PLAYERS = 1
+
+background = Image(join(dirname(__file__), 'background.png'))
+background.texture.wrap = GL_REPEAT
 
 class Choose(KalScenarioServer):
     resources = (
@@ -13,6 +19,32 @@ class Choose(KalScenarioServer):
         super(Choose, self).__init__(*largs)
         self.players = {}
         self.selected_scenario = None
+        self.c1 = get_color_from_hex('#96be25aa')
+        self.c2 = get_color_from_hex('#e6461faa')
+        self.c3 = get_color_from_hex('#81cac8aa')
+        self.c4 = get_color_from_hex('#7f398baa')
+        self.controler.ui.children = []
+
+    def draw(self):
+        set_color(1)
+        w, h = getWindow().size
+        t = list(background.texture.tex_coords)
+        t[2] = t[4] = w / float(background.width)
+        t[5] = t[7] = h / float(background.height)
+        drawTexturedRectangle(background.texture, size=getWindow().size,
+                             tex_coords=t)
+
+        cx, cy = getWindow().center
+        m = 50
+        m2 = m * 2
+        set_color(*self.c1)
+        drawRoundedRectangle(pos=(m, m), size=(cx - m2, cy - m2))
+        set_color(*self.c2)
+        drawRoundedRectangle(pos=(cx + m, m), size=(cx - m2, cy - m2))
+        set_color(*self.c3)
+        drawRoundedRectangle(pos=(m, cy + m), size=(cx - m2, cy - m2))
+        set_color(*self.c4)
+        drawRoundedRectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
 
     def start(self):
         super(Choose, self).start()
