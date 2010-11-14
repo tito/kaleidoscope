@@ -1,5 +1,4 @@
-import os
-
+from os.path import join, dirname
 from kaleidoscope.scenario import KalScenarioClient
 from pymt import *
 from pymt.parser import parse_color
@@ -18,8 +17,7 @@ pentaminosquare {
 }
 
 pentalistcontainer {
-    draw-background: 1;
-    bg-color: rgb(80, 80, 80);
+    draw-background: 0;
 }
 
 .pentabtn {
@@ -36,9 +34,17 @@ pentalistcontainer {
 }
 ''')
 
-myriad_fontname = os.path.join(os.path.dirname(__file__), 'myriad.ttf')
+square_background = Image(join(dirname(__file__), 'penta-square.png'))
+square_shadow = Image(join(dirname(__file__), 'penta-square-shadow.png'))
+penta_background = Image(join(dirname(__file__), 'penta-background.png'))
+penta_background.texture.wrap = GL_REPEAT
+penta_background_bottom = Image(join(dirname(__file__), 'penta-background-bottom.png'))
+background = Image(join(dirname(__file__), 'background.png'))
+background.texture.wrap = GL_REPEAT
+myriad_fontname = join(dirname(__file__), 'myriad.ttf')
 
-SQUARE = 75
+SQUARE = 100
+SQUARE_MM = 75
 SQUARE_M = 5
 
 class PentaContainer(MTWidget):
@@ -81,11 +87,11 @@ class PentaListContainer(MTBoxLayout):
         kwargs.setdefault('invert', True)
         kwargs.setdefault('size_hint', (1, None))
         w, h = getWindow().size
-        h = w / 12
+        h = 100
         kwargs.setdefault('height', h)
-        kwargs.setdefault('pos', (0, getWindow().height - h))
+        kwargs.setdefault('pos', (0, 0))
         super(PentaListContainer, self).__init__(**kwargs)
-        for x in xrange(12):
+        for x in xrange(6):
             self.add_widget(PentaContainer(size=(h, h)))
         self.idx = 0
 
@@ -233,9 +239,11 @@ class PentaminoAssembled(MTScatter):
 class PentaminoSquare(MTScatter):
     def __init__(self, **kwargs):
         kwargs.setdefault('do_scale', False)
+        kwargs.setdefault('do_rotate', False)
         kwargs.setdefault('size', (SQUARE, SQUARE))
         super(PentaminoSquare, self).__init__(**kwargs)
         self.highlight = None
+        self.drawmode = 'normal'
 
     def on_touch_down(self, touch):
         '''Remove the square in the grid if exist
@@ -252,7 +260,8 @@ class PentaminoSquare(MTScatter):
             return
         if not touch.grab_state:
             return
-        ix, iy = self.parent.collide_grid(touch.x, touch.y)
+        cx, cy = self.center
+        ix, iy = self.parent.collide_grid(cx, cy)
         if ix == -1:
             self.highlight = None
             return
@@ -265,11 +274,19 @@ class PentaminoSquare(MTScatter):
             return
         if not touch.grab_state:
             return
-        ix, iy = self.parent.collide_grid(touch.x, touch.y)
+        cx, cy = self.center
+        ix, iy = self.parent.collide_grid(cx, cy)
         if ix == -1:
             return
         self.parent.drop_square(self, ix, iy)
         self.highlight = None
+
+    def draw(self):
+        set_color(1, blend=True)
+        if self.drawmode == 'shadow':
+            drawTexturedRectangle(texture=square_shadow.texture, size=(SQUARE,SQUARE))
+        else:
+            drawTexturedRectangle(texture=square_background.texture, size=(SQUARE,SQUARE))
 
 class PentaminosContainer(MTWidget):
     def __init__(self, client, **kwargs):
@@ -279,6 +296,8 @@ class PentaminosContainer(MTWidget):
         self.reset()
         self.last_msg = ''
         self.done = []
+        self.backy = 0
+        self.do(Animation(backy=self.height - 100, f='ease_out_elastic'))
 
     def reset(self):
         self.children.clear()
@@ -315,7 +334,7 @@ class PentaminosContainer(MTWidget):
     def my(self):
         '''Return the Y margin to start drawing
         '''
-        return 100
+        return self.height - self.backy + 100
 
     @property
     def mx(self):
@@ -341,7 +360,6 @@ class PentaminosContainer(MTWidget):
         if isinstance(square, PentaminoSquare):
             square.do(Animation(
                 pos=(self.mx + ix * self.step, self.my + iy * self.step),
-                rotation=square.rotation - square.rotation % 90,
                 f='ease_out_cubic', d=.1))
 
     def remove_square(self, square):
@@ -353,6 +371,59 @@ class PentaminosContainer(MTWidget):
             for y in xrange(gh):
                 if g[x][y] == square:
                     g[x][y] = None
+
+    def nearest_square(self, current):
+        cpos = Vector(current.pos)
+        nearest_d = 999
+        nearest_child = None
+        for child in self.children:
+            if not isinstance(child, PentaminoSquare):
+                continue
+            if child is current:
+                continue
+            d = cpos.distance(child.pos)
+            if d < nearest_d:
+                nearest_d = d
+                nearest_child = child
+        return nearest_child, nearest_d
+
+
+    def on_update(self):
+        super(PentaminosContainer, self).on_update()
+        if self.client.gametype == 'game1':
+            self.check_grid_pentamino()
+
+    def check_grid_pentamino(self):
+        k = self.is_pentamino()
+        if not k:
+            return
+        if k in self.done:
+            # TODO do an error
+            return
+        # add to our list
+        penta, w, h = self.client.pcontainer.get_pentamino()
+        self.client.lcontainer.add_penta(k, penta, w, h)
+        self.done.append(k)
+        # send to server
+        self.client.send('PENTAMINO %s %d %d %s' % (k, w, h, penta))
+        self.client.pcontainer.reset()
+
+    def is_pentamino(self):
+        penta, w, h = self.get_pentamino()
+        if w == 0 or h == 0:
+            return
+        return self.search_pentamino(penta, w, h)
+
+    def search_pentamino(self, penta, w, h):
+        penta_size = (w, h)
+        for k, possibilities in penta_schemes.iteritems():
+            for d_size, d_penta in possibilities:
+                if penta_size != d_size:
+                    continue
+                if penta != d_penta:
+                    continue
+                return k
+        return None
 
     def get_pentamino(self):
         '''After most calculation done, the best and fast way is to test every pentaminos.
@@ -425,67 +496,41 @@ class PentaminosContainer(MTWidget):
 
         return (simplified_penta, gw - len(rm_x), gh - len(rm_y))
 
-    def is_pentamino(self):
-        penta, w, h = self.get_pentamino()
-        if w == 0 or h == 0:
-            return
-        return self.search_pentamino(penta, w, h)
-
-    def search_pentamino(self, penta, w, h):
-        penta_size = (w, h)
-        for k, possibilities in penta_schemes.iteritems():
-            for d_size, d_penta in possibilities:
-                if penta_size != d_size:
-                    continue
-                if penta != d_penta:
-                    continue
-                return k
-        return None
-
-    def on_update(self):
-        super(PentaminosContainer, self).on_update()
-        if self.client.gametype == 'game1':
-            self.check_grid_pentamino()
-
-    def check_grid_pentamino(self):
-        k = self.is_pentamino()
-        if not k:
-            return
-        if k in self.done:
-            # TODO do an error
-            return
-        # add to our list
-        penta, w, h = self.client.pcontainer.get_pentamino()
-        self.client.lcontainer.add_penta(k, penta, w, h)
-        self.done.append(k)
-        # send to server
-        self.client.send('PENTAMINO %s %d %d %s' % (k, w, h, penta))
-        self.client.pcontainer.reset()
-
     def on_draw(self):
         '''Hack to be able to draw children ok + highlight + children moving
         '''
         self.draw()
-        for x in self.children:
-            if x.highlight:
-                continue
-            x.dispatch_event('on_draw')
         self.draw_after()
         for x in self.children:
-            if not x.highlight:
-                continue
+            x.drawmode = 'shadow'
+            x.dispatch_event('on_draw')
+            x.drawmode = ''
+        for x in self.children:
             x.dispatch_event('on_draw')
 
     def draw(self):
-        '''Draw grid
-        '''
+        w, h = getWindow().size
+        set_color(1)
+        b = self.backy - penta_background_bottom.height
+        t = list(penta_background.texture.tex_coords)
+        t[2] = t[4] = w / float(penta_background.width)
+        t[5] = t[7] = b / float(penta_background.height)
+        drawTexturedRectangle(texture=penta_background.texture,
+                              pos=(0, h - b),
+                              size=(w, b),
+                              tex_coords=t)
+        set_color(1, blend=True)
+        drawTexturedRectangle(texture=penta_background_bottom.texture,
+                              pos=(0, h - self.backy),
+                              size=(w, penta_background_bottom.height))
+
         gw, gh = self.client.gridsize
         step = self.step
         mx = self.mx
         my = self.my
         s = (SQUARE, SQUARE)
         y = self.my
-        set_color(*self.client.text_color)
+        set_color(1, 1, 1, .5)
         for iy in xrange(gh):
             x = mx
             for ix in xrange(gw):
@@ -509,9 +554,9 @@ class PentaminosContainer(MTWidget):
                 if ix < 0 or ix >= gw or iy < 0 or iy >= gh:
                     continue
                 if grid[ix][iy] is None:
-                    set_color(.9, .9, .9)
+                    set_color(.9, .9, .9, .7)
                 else:
-                    set_color(1, .2, .2)
+                    set_color(1, .2, .2, .7)
                 drawRectangle(pos=(mx + ix * step, my + iy * step), size=s)
 
 
@@ -549,19 +594,16 @@ class PentaminosClient(KalScenarioClient):
     def handle_msg(self, message):
         self.last_msg = message
 
-    def handle_beready(self, message):
-        btn = MTButton(label='I am ready', cls=['pentabtn', 'ready'],
+    def handle_waitready(self, message):
+        self.container.children = []
+        btn = MTLabel(label='En attente...', cls=['pentabtn', 'ready'],
                 size=(200, 100))
         anchor = MTAnchorLayout(size=self.container.size)
         anchor.add_widget(btn)
         self.container.add_widget(anchor)
 
-        def on_ready(*l):
-            self.send('READY')
-            self.container.remove_widget(anchor)
-        btn.connect('on_release', on_ready)
-
     def handle_game1(self, args):
+        self.container.children = []
         self.gametype = 'game1'
         self.pcontainer = PentaminosContainer(self, size=getWindow().size)
         self.lcontainer = PentaListContainer()
@@ -569,6 +611,7 @@ class PentaminosClient(KalScenarioClient):
         self.container.add_widget(self.pcontainer)
 
     def handle_game2(self, args):
+        self.container.children = []
         self.gametype = 'game2'
         self.container.remove_widget(self.lcontainer)
 
@@ -577,20 +620,13 @@ class PentaminosClient(KalScenarioClient):
         self.count = l
         w, h = getWindow().size
 
-        m = 100
-        mp = 100
-        x = m
-        y = h - m
+        x = (w - (SQUARE + SQUARE_MM) * (l-1)) / 2.
+        y = h - SQUARE_MM
         for n in xrange(self.count):
-            r = random() * 360
-            p = PentaminoSquare(center=(x, y), rotation=r, scale=.0001)
+            p = PentaminoSquare(center=(x, y), scale=.0001)
             p.do(Delay(d=random() * 1) + Animation(scale=1, center=(x, y), f='ease_out_elastic', d=1))
-            x += mp
-            if x > w - m:
-                y -= mp
-                x -= w - m * 2
+            x += SQUARE + SQUARE_MM
             self.pcontainer.add_widget(p)
-
 
     def handle_color(self, args):
         bg, fg = map(parse_color, args.split())
@@ -598,18 +634,30 @@ class PentaminosClient(KalScenarioClient):
         self.text_color = fg
 
     def draw(self):
-        self.current_color = interpolate(self.current_color, self.color)
-        self.current_text_color = interpolate(self.current_text_color,
-                                              self.text_color)
-        set_color(*self.current_color)
-        drawRectangle(size=getWindow().size)
+        set_color(1)
+        w, h = getWindow().size
+        t = list(background.texture.tex_coords)
+        t[2] = t[4] = w / float(background.width)
+        t[5] = t[7] = h / float(background.height)
+        drawTexturedRectangle(background.texture, size=getWindow().size,
+                             tex_coords=t)
 
+    def draw_after(self):
         msg = self.last_msg
-        if msg:
-            drawLabel(label=msg, pos=(10, 10), center=False,
-                      font_name=myriad_fontname,
-                      color=self.current_text_color,
-                      font_size=24)
+        if not msg:
+            return
+        if self.gametype == 'game1':
+            y = self.pcontainer.height - self.pcontainer.backy + 30
+        else:
+            y = 130
+
+        w, h = getWindow().size
+        set_color(1)
+        drawLabel(label=msg, pos=(w / 2., y), center=False,
+                  anchor_x='center',
+                  font_name=myriad_fontname,
+                  color=self.current_text_color,
+                  font_size=24)
 
 
 scenario_class = PentaminosClient

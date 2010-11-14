@@ -9,6 +9,11 @@ PENTAMINOS_COUNT_BY_USERS = 3
 
 class Pentaminos(KalScenarioServer):
     resources = (
+        'penta-background.png',
+        'penta-background-bottom.png',
+        'penta-square.png',
+        'penta-square-shadow.png',
+        'background.png',
         'client.py',
         'myriad.ttf',
         'penta_color.py',
@@ -17,7 +22,6 @@ class Pentaminos(KalScenarioServer):
         super(Pentaminos, self).__init__(*largs)
         self.timeout = 0
         self.players = {}
-        idx = 0
 
         # init client table
         for client in self.controler.clients:
@@ -27,13 +31,15 @@ class Pentaminos(KalScenarioServer):
                 'ready': False,
                 'pentaminos': []
             }
-            idx += 1
+
+    def client_login(self, client):
+        self.players[client]['ready'] = True
 
     def start(self):
         '''Scenario start, wait for all player to be ready
         '''
         super(Pentaminos, self).start()
-        self.send_all('BEREADY')
+        self.send_all('WAITREADY')
         self.state = 'waitready'
 
     #
@@ -53,9 +59,9 @@ class Pentaminos(KalScenarioServer):
         if left:
             # validate to client
             self.send_to(client, 'GIVE 5')
-            self.send_to(client, 'MSG Great job, you have %d pentaminos left to do' % left)
+            self.send_to(client, 'MSG Bravo ! Encore %d pentaminos.' % left)
         else:
-            self.send_to(client, 'MSG You\'ve finished ! Please wait other people now :)')
+            self.send_to(client, u'MSG Tu as termin\xe9 ! Attend tes camarades maintenant')
 
     def do_client_ready(self, client, args):
         self.players[client]['ready'] = True
@@ -77,7 +83,7 @@ class Pentaminos(KalScenarioServer):
         if not ready:
             return
 
-        self.msg_all('You must do %d pentaminos' % PENTAMINOS_COUNT_BY_USERS)
+        self.msg_all('Construit %d pentaminos' % PENTAMINOS_COUNT_BY_USERS)
         self.send_all('SIZE %d %d' % PENTAMINOS_SIZE)
         self.send_all('GAME1')
         self.send_all('GIVE 5')

@@ -131,7 +131,7 @@ class KalClientChannel(asynchat.async_chat):
             except Exception, e:
                 self.push('STATUS failed <%s>\n' % e)
                 raise
-            self.push('STATUS ok\n')
+            self.push('STATUS ready\n')
 
     def handle_error(self):
         print '<<<<<<<<<<<<<<<<<<<<<< ERROR'
@@ -169,7 +169,7 @@ class KalClientInteractive(MTWidget):
         self.history = []
 
         getClock().schedule_interval(self.update_loop, 0)
-        self.dispatch_event('on_notify', 'Connecting to %s' % self.ip)
+        self.dispatch_event('on_notify', 'Connexion sur %s' % self.ip)
 
     def update_loop(self, *l):
         asyncore.loop(timeout=0, count=1)
@@ -194,6 +194,10 @@ class KalClientInteractive(MTWidget):
     def on_load(self, args):
         pass
 
+    def on_draw(self):
+        super(KalClientInteractive, self).on_draw()
+        self.draw_after()
+
     def draw(self):
         # if we have a scenario, draw it
         if self.client.channel:
@@ -206,3 +210,14 @@ class KalClientInteractive(MTWidget):
             label = self.history[-1]
             drawLabel(label=label, pos=self.center,
                       font_size=42, color=(1, 1, 1, 1))
+
+    def draw_after(self):
+        # if we have a scenario, draw it
+        channel = self.client.channel
+        if not channel:
+            return
+        if channel.scenario is None:
+            return
+        if not hasattr(channel.scenario, 'draw_after'):
+            return
+        channel.scenario.draw_after()

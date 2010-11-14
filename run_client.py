@@ -7,7 +7,7 @@ def usage():
     sys.exit(0)
 
 if __name__ == '__main__':
-    from pymt import *
+    from pymt import runTouchApp, getWindow
     from kaleidoscope.client import KalClientInteractive
     import sys
 
