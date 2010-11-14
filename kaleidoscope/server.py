@@ -32,6 +32,7 @@ class KalGameControler(object):
             if self.state != 'idle':
                 print '# All clients have leaved, reset to idle.'
                 self.state = 'idle'
+                self.controler.ui.children = []
                 self.reset()
 
         try:

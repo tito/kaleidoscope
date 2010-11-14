@@ -98,7 +98,7 @@ class ChooseClient(KalScenarioClient):
         py = cy
         for scenario, name in (
             ('pentaminos', 'Pentaminos'),
-            ('anglais', 'Anglais')
+            #('anglais', 'Anglais')
         ):
             button = MTButton(label=name, size=(350, 100),
                               pos=(cx - 350 / 2., py - 100),
