@@ -29,11 +29,15 @@ class Pentaminos(KalScenarioServer):
                 'client': client,
                 'name': self.controler.get_client_name(client),
                 'ready': False,
+                'done': False,
                 'pentaminos': []
             }
 
     def client_login(self, client):
         self.players[client]['ready'] = True
+
+    def client_logout(self, client):
+        del self.players[client]
 
     def start(self):
         '''Scenario start, wait for all player to be ready
@@ -61,14 +65,19 @@ class Pentaminos(KalScenarioServer):
             self.send_to(client, 'GIVE 5')
             self.send_to(client, 'MSG Bravo ! Encore %d pentaminos.' % left)
         else:
-            self.send_to(client, u'MSG Tu as termin\xe9 ! Attend tes camarades maintenant')
+            self.send_to(client, 'MSG Tu as fini ! Attend tes camarades maintenant')
 
     def do_client_ready(self, client, args):
         self.players[client]['ready'] = True
         count = len([x for x in self.players.itervalues() if not x['ready']])
         if count:
-            self.msg_all('@%s is ready, waiting %d players' % (
+            self.msg_all('@%s ok, en attente de %d joueur(s)' % (
                 self.players[client]['name'], count))
+
+    def do_client_rectdone(self, client, args):
+        self.players[client]['done'] = True
+        self.send_to(client, 'ENDING')
+        self.msg_all('@%s a fini son rectangle !' % self.players[client]['name'])
 
     #
     # State machine
@@ -103,7 +112,7 @@ class Pentaminos(KalScenarioServer):
 
     def run_reset_for_game2(self):
         self.send_all('CLEAR')
-        self.msg_all('Well done ! Now, construct a rect :)')
+        self.msg_all('Rempli le rectangle avec les pentaminos')
         self.state = 'game2'
 
         # extract all pentaminos

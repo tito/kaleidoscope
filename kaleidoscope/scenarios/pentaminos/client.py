@@ -114,6 +114,7 @@ class PentaminoAssembled(MTScatter):
         self.key = key
         self.color = parse_color(penta_colors[key])
         self.highlight = None
+        self.fit = False
 
     def turn_left(self, coords, orientation):
         if orientation == 0:
@@ -143,13 +144,15 @@ class PentaminoAssembled(MTScatter):
     def check_from(self, x, y, rotation):
         # get drop point (+ trick for drop zone)
         px, py = self.pos
-        dx, dy = self.parent.position_in_grid(px, py)
+        s2 = SQUARE / 2
+        dx, dy = self.parent.position_in_grid(px + s2, py + s2)
 
         # convert to our ix, iy
         x, y = self.to_local(x, y)
+        s2 = SQUARE / 2
         x = int(x / (SQUARE + SQUARE_M))
         y = int(y / (SQUARE + SQUARE_M))
-        orientation = int(((rotation + 1) % 360) / 90)
+        orientation = int(round(((rotation) % 360) / 90))
 
         coords_to_test = []
         pw = self.pw
@@ -178,6 +181,7 @@ class PentaminoAssembled(MTScatter):
         '''
         if super(PentaminoAssembled, self).on_touch_down(touch):
             self.parent.remove_square(self)
+            self.do(Animation(scale=1., d=.2, f='ease_out_cubic'))
             return True
         return False
 
@@ -188,7 +192,7 @@ class PentaminoAssembled(MTScatter):
             return
         if not touch.grab_state:
             return
-        self.check_from(touch.x, touch.y, self.rotation)
+        self.check_from(self.x, self.y, self.rotation)
         return True
 
     def on_touch_up(self, touch):
@@ -196,7 +200,8 @@ class PentaminoAssembled(MTScatter):
             return
         if not touch.grab_state:
             return
-        rot = self.rotation - self.rotation % 90
+        rot = round(((self.rotation) % 360) / 90) * 90
+        #rot = self.rotation - self.rotation % 90
         self.do(Animation(rotation=rot,
                           d=.1, f='ease_out_cubic'))
         # ensure that all coords fit in the grid
@@ -211,19 +216,28 @@ class PentaminoAssembled(MTScatter):
             if p.grid[ix][iy]:
                 fit = False
                 break
+        self.fit = fit
         if fit:
             for x, y in coords:
                 p.drop_square(self, x, y)
             # align to the grid
-            ix, iy = p.position_in_grid(*self.pos)
+            px, py = self.pos
+            s2 = SQUARE / 2
+            ix, iy = p.position_in_grid(px + s2, py + s2)
             self.do(Animation(
                 pos=(p.mx + ix * p.step, p.my + iy * p.step),
                 f='ease_out_cubic', d=.1))
+        elif len(self._touches) == 0:
+            self.do(Animation(scale=0.4,
+                              x=self.parent.width - 150 - 350 * random(),
+                              d=.2, f='ease_out_cubic'))
         self.highlight = None
         return True
 
     def draw(self):
-        set_color(*self.color)
+        if self.drawmode == 'shadow':
+            return
+        set_color(*self.color, blend=True)
         size = (SQUARE, SQUARE)
         pw = self.pw
         ph = self.ph
@@ -235,6 +249,14 @@ class PentaminoAssembled(MTScatter):
                 x = ix * (SQUARE + SQUARE_M)
                 y = iy * (SQUARE + SQUARE_M)
                 drawRectangle(pos=(x, y), size=size)
+                '''
+                if self.drawmode == 'shadow':
+                    drawTexturedRectangle(texture=square_shadow.texture,
+                                          pos=(x, y), size=size)
+                else:
+                    drawTexturedRectangle(texture=square_background.texture,
+                                          pos=(x, y), size=size)
+                '''
 
 class PentaminoSquare(MTScatter):
     def __init__(self, **kwargs):
@@ -296,17 +318,23 @@ class PentaminosContainer(MTWidget):
         self.reset()
         self.last_msg = ''
         self.done = []
-        self.backy = 0
-        self.do(Animation(backy=self.height - 100, f='ease_out_elastic'))
+        self.backy = -1
+        self.gridx = 0
 
     def reset(self):
         self.children.clear()
         self.grid = []
+        self.griddone = False
         gw, gh = self.client.gridsize
         for x in xrange(gw):
             self.grid.append([])
             for y in xrange(gh):
                 self.grid[-1].append(None)
+
+    def on_touch_down(self, touch):
+        if self.griddone:
+            return
+        return super(PentaminosContainer, self).on_touch_down(touch)
 
     def position_in_grid(self, x, y):
         '''Get the x/y index in the grid for a x/y position on screen
@@ -334,15 +362,19 @@ class PentaminosContainer(MTWidget):
     def my(self):
         '''Return the Y margin to start drawing
         '''
-        return self.height - self.backy + 100
+        if self.client.gametype == 'game1':
+            return self.height - self.backy + 100
+        return (self.height - SQUARE * self.client.gridsize[1]) / 2.
 
     @property
     def mx(self):
         '''Return the X margin to start drawing
         '''
-        w, h = self.size
-        gw, gh = self.client.gridsize
-        return (w - gw * (SQUARE + SQUARE_M)) / 2.
+        if self.client.gametype == 'game1':
+            w, h = self.size
+            gw, gh = self.client.gridsize
+            return (w - gw * (SQUARE + SQUARE_M)) / 2.
+        return 100
 
     @property
     def step(self):
@@ -579,11 +611,11 @@ class PentaminosClient(KalScenarioClient):
         c = args.split()
         key, w, h, string = c
         r = randint(0, 3) * 90
-        y = self.pcontainer.height - 200
-        x = 100 + random() * (self.pcontainer.width - 200)
+        y = 200 + (self.pcontainer.height - 400) * random()
+        x = self.pcontainer.width - 150 - random() * 350
         p = PentaminoAssembled(key, w, h, string,
                           center=(x, y), rotation=r, scale=.0001)
-        p.do(Delay(d=random() * 1) + Animation(scale=1, f='ease_out_elastic', d=1))
+        p.do(Delay(d=random() * 1) + Animation(scale=.4, f='ease_out_elastic', d=1))
         self.pcontainer.add_widget(p)
 
     def handle_size(self, args):
@@ -611,11 +643,24 @@ class PentaminosClient(KalScenarioClient):
         self.container.add_widget(self.pcontainer)
 
     def handle_game2(self, args):
-        self.container.children = []
+        self.pcontainer.do(Animation(backy=0, d=1.5, f='ease_out_cubic'))
         self.gametype = 'game2'
         self.container.remove_widget(self.lcontainer)
 
+    def handle_ending(self, args):
+        for x in self.pcontainer.children:
+            if not isinstance(x, PentaminoAssembled):
+                continue
+            if x.fit:
+                continue
+            a = Animation(scale=0.0001, d=1.)
+            x.do(a)
+
     def handle_give(self, args):
+        pc = self.pcontainer
+        if pc.backy == -1:
+            pc.backy = 0
+            pc.do(Animation(backy=pc.height - 100, d=1.5, f='ease_out_elastic'))
         l = int(args)
         self.count = l
         w, h = getWindow().size
@@ -626,14 +671,19 @@ class PentaminosClient(KalScenarioClient):
             p = PentaminoSquare(center=(x, y), scale=.0001)
             p.do(Delay(d=random() * 1) + Animation(scale=1, center=(x, y), f='ease_out_elastic', d=1))
             x += SQUARE + SQUARE_MM
-            self.pcontainer.add_widget(p)
-
-    def handle_color(self, args):
-        bg, fg = map(parse_color, args.split())
-        self.color = bg
-        self.text_color = fg
+            pc.add_widget(p)
 
     def draw(self):
+        # check the grid ?
+        if self.gametype == 'game2' and not self.pcontainer.griddone:
+            done = True
+            for x in self.pcontainer.grid:
+                if None in x:
+                    done = False
+            if done:
+                self.pcontainer.griddone = True
+                self.send('RECTDONE')
+
         set_color(1)
         w, h = getWindow().size
         t = list(background.texture.tex_coords)
@@ -649,7 +699,7 @@ class PentaminosClient(KalScenarioClient):
         if self.gametype == 'game1':
             y = self.pcontainer.height - self.pcontainer.backy + 30
         else:
-            y = 130
+            y = 20
 
         w, h = getWindow().size
         set_color(1)
