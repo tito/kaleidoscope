@@ -126,13 +126,12 @@ class Pentaminos(KalScenarioServer):
         self.send_all('SIZE %d %d' % PENTAMINOS_SIZE2)
 
         # distribute
-        for player in self.players.itervalues():
-            for k, v in penta_schemes.iteritems():
-                size, string = v[0]
-                w, h = size
-                # send the penta to the user
-                self.send_all('PENTA %s %d %d %s' % (
-                    k, w, h, string))
+        for k, v in penta_schemes.iteritems():
+            size, string = v[0]
+            w, h = size
+            # send the penta to the user
+            self.send_all('PENTA %s %d %d %s' % (
+                k, w, h, string))
 
     def run_game2(self):
         pass

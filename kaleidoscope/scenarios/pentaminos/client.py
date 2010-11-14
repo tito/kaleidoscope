@@ -228,8 +228,11 @@ class PentaminoAssembled(MTScatter):
                 pos=(p.mx + ix * p.step, p.my + iy * p.step),
                 f='ease_out_cubic', d=.1))
         elif len(self._touches) == 0:
+            x = self.x
+            if x < self.parent.width / 2.:
+                x = self.parent.width - 150 - 350 * random()
             self.do(Animation(scale=0.4,
-                              x=self.parent.width - 150 - 350 * random(),
+                              x=x,
                               d=.2, f='ease_out_cubic'))
         self.highlight = None
         return True
