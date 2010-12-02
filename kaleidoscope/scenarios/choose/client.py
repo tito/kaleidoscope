@@ -56,7 +56,7 @@ class ChooseClient(KalScenarioClient):
         m = 10
         self.container.children = []
         self.container.add_widget(
-            MTLabel(label='Choisi un emplacement',
+            MTLabel(label='Choisis un emplacement',
                     cls='font', anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
@@ -88,7 +88,7 @@ class ChooseClient(KalScenarioClient):
         m = 10
         self.container.children = []
         self.container.add_widget(
-            MTLabel(label='Choisi un scenario',
+            MTLabel(label='Choisis un scenario',
                     cls='font', anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
@@ -118,7 +118,7 @@ class ChooseClient(KalScenarioClient):
         cx, cy = getWindow().center
         self.container.children = []
         self.container.add_widget(
-            MTLabel(label=u'Cliquez une fois que tous les joueurs ont une place',
+            MTLabel(label=u'Cliques lorsque tous les joueurs ont une place',
                     cls='font', anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),

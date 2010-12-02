@@ -47,7 +47,7 @@ class Pentaminos(KalScenarioServer):
         ui.children = []
 
         # Top
-        self.l1 = label = MTLabel(label=u'Assemblez les 5 carr\xe9s dans la grille pour'
+        self.l1 = label = MTLabel(label=u'Assemble les 5 carr\xe9s dans la grille pour'
                         u'former un Pentamino', autowidth=True,
                         font_size=24)
         label.on_update()
@@ -59,7 +59,7 @@ class Pentaminos(KalScenarioServer):
         ui.add_widget(m1)
 
         # Bottom
-        self.l2 = label = MTLabel(label=u'Assemblez les 5 carr\xe9s dans la grille pour'
+        self.l2 = label = MTLabel(label=u'Assemble les 5 carr\xe9s dans la grille pour'
                         u'former un Pentamino', autowidth=True,
                         font_size=24)
         label.on_update()
@@ -127,7 +127,7 @@ class Pentaminos(KalScenarioServer):
             self.send_to(client, 'GIVE 5')
             self.send_to(client, 'MSG Bravo ! Encore %d pentaminos.' % left)
         else:
-            self.send_to(client, 'MSG Tu as fini ! Attend tes camarades maintenant')
+            self.send_to(client, 'MSG Tu as fini ! Attends tes camarades maintenant')
 
     def do_client_ready(self, client, args):
         self.players[client]['ready'] = True
@@ -155,7 +155,7 @@ class Pentaminos(KalScenarioServer):
             return
 
         self.timeout = time() + TIMER
-        self.msg_all('Construit %d pentaminos' % PENTAMINOS_COUNT_BY_USERS)
+        self.msg_all('Construis %d pentaminos' % PENTAMINOS_COUNT_BY_USERS)
         self.send_all('TIME %d' % int(self.timeout))
         self.send_all('SIZE %d %d' % PENTAMINOS_SIZE)
         self.send_all('GAME1')
@@ -185,7 +185,7 @@ class Pentaminos(KalScenarioServer):
 
     def run_reset_for_game2(self):
         self.send_all('CLEAR')
-        self.msg_all('Rempli le rectangle avec les pentaminos')
+        self.msg_all('Remplis le rectangle avec les pentaminos')
         self.state = 'game2'
 
         # extract all pentaminos
@@ -208,7 +208,7 @@ class Pentaminos(KalScenarioServer):
 
         self.timeout = time() + TIMER
         self.send_all('TIME %d' % int(self.timeout))
-        self.label = 'Former un rectangle de 5x6 avec des Pentaminos'
+        self.label = 'Forme un rectangle de 5x6 avec des Pentaminos'
 
     def run_game2(self):
         if time() > self.timeout:
