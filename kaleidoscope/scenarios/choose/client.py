@@ -1,12 +1,18 @@
-from os.path import join, dirname
+from os.path import dirname
 from kaleidoscope.scenario import KalScenarioClient
-from pymt import *
-from OpenGL.GL import GL_REPEAT
 
-background = Image(join(dirname(__file__), 'background.png'))
-background.texture.wrap = GL_REPEAT
-myriad_fontname = join(dirname(__file__), 'myriad.ttf')
+from kivy.properties import NumericProperty, BooleanProperty
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.core.window import Window
+from kivy.lang import Builder
+from kivy.resources import resource_add_path
+from functools import partial
 
+#background = Image(join(dirname(__file__), 'background.png'))
+#myriad_fontname = join(dirname(__file__), 'myriad.ttf')
+
+"""
 css_add_sheet('''
 .font {
     font-size: 24;
@@ -33,15 +39,35 @@ css_add_sheet('''
     draw-background: 0;
 }
 ''')
+"""
+
+resource_add_path(dirname(__file__))
+
+Builder.load_string('''
+<PlaceButton>:
+    font_size: 24
+    halign: 'center'
+    canvas.before:
+        Color:
+            rgba: (.5, .5, .5, .5) if not self.valid else [(.5, .5, .5, .5), (.5882, .7450, .1450, 1), (.9019, .2745, .121, 1), (.5058, .7921, .7843, 1), (.4980, .2235, .5450, 1)][self.idx]
+        BorderImage:
+            source: 'buttonbackground.png'
+            pos: self.pos
+            size: self.size
+''')
+
+class PlaceButton(Button):
+    valid = BooleanProperty(True)
+    idx = NumericProperty(0)
 
 class ChooseClient(KalScenarioClient):
     def draw(self):
         set_color(1)
-        w, h = getWindow().size
+        w, h = Window.size
         t = list(background.texture.tex_coords)
         t[2] = t[4] = w / float(background.width)
         t[5] = t[7] = h / float(background.height)
-        drawTexturedRectangle(background.texture, size=getWindow().size,
+        drawTexturedRectangle(background.texture, size=Window.size,
                              tex_coords=t)
 
     def handle_place(self, args):
@@ -51,30 +77,30 @@ class ChooseClient(KalScenarioClient):
             self.send('PLACE %d' % idx)
 
         available = map(int, args.split())
-        cx, cy = getWindow().center
+        cx, cy = Window.center
         s = 200
         m = 10
-        self.container.children = []
+        self.container.clear_widgets()
         self.container.add_widget(
-            MTLabel(label='Choisis un emplacement',
-                    cls='font', anchor_x='center',
-                    anchor_y='middle',
-                    pos=(0, cy + 200),
-                    size=(getWindow().width, 100)
+            Label(text='Choisis un emplacement',
+                  font_size=24,
+                  anchor_x='center',
+                  anchor_y='middle',
+                  pos=(0, cy + 200),
+                  size=(Window.width, 100)
         ))
         for idx, px, py in ((1, cx-s-m, cy-s-m), (2, cx+m, cy-s-m),
                             (3, cx-s-m, cy+m), (4, cx+m, cy+m)):
-            cls = 'valid' if idx in available else 'notvalid'
-            button = MTButton(label='Place\n%s' % idx,
-                              size=(200, 200), cls=['font', 'placebtn',
-                                                    cls, 'idx%d' % idx],
+            valid = idx in available
+            button = PlaceButton(text='Place\n%s' % idx, idx=idx,
+                              size=(200, 200), valid=valid,
                               pos=(px, py))
             self.container.add_widget(button)
 
-            if cls == 'notvalid':
+            if not valid:
                 continue
 
-            button.connect('on_release', curry(place_press, idx))
+            button.bind(on_release=partial(place_press, idx))
 
     def handle_scenario(self, args):
         '''Select the scenario
@@ -83,16 +109,16 @@ class ChooseClient(KalScenarioClient):
         def scenario_press(scenario, *largs):
             self.send('SCENARIO %s' % scenario)
 
-        cx, cy = getWindow().center
+        cx, cy = Window.center
         s = 200
         m = 10
-        self.container.children = []
+        self.container.clear_widgets()
         self.container.add_widget(
-            MTLabel(label='Choisis un scenario',
-                    cls='font', anchor_x='center',
+            Label(text='Choisis un scenario',
+                    font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
-                    size=(getWindow().width, 100)
+                    size=(Window.width, 100)
         ))
 
         py = cy
@@ -100,55 +126,53 @@ class ChooseClient(KalScenarioClient):
             ('pentaminos', 'Pentaminos'),
             #('anglais', 'Anglais')
         ):
-            button = MTButton(label=name, size=(350, 100),
-                              pos=(cx - 350 / 2., py - 100),
-                              cls=['font', 'placebtn'])
+            button = PlaceButton(text=name, size=(350, 100),
+                            pos=(cx - 350 / 2., py - 100))
             self.container.add_widget(button)
             py += 100 + m * 2
 
-            button.connect('on_release', curry(scenario_press, scenario))
+            button.bind(on_release=partial(scenario_press, scenario))
 
     def handle_beready(self, args):
         '''Be ready !
         '''
 
-        def beready_press(scenario, *largs):
+        def beready_press(*largs):
             self.send('READY')
 
-        cx, cy = getWindow().center
-        self.container.children = []
+        cx, cy = Window.center
+        self.container.clear_widgets()
         self.container.add_widget(
-            MTLabel(label=u'Cliques lorsque tous les joueurs ont une place',
-                    cls='font', anchor_x='center',
+            Label(text=u'Cliques lorsque tous les joueurs ont une place',
+                    font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
-                    size=(getWindow().width, 100)
+                    size=(Window.width, 100)
         ))
-        button = MTButton(label=u'Je suis pr\xeat',
-                          cls=['font', 'placebtn'],
-                          size=(350, 100),
-                          pos=(cx - 350 / 2., cy - 50))
-        button.connect('on_release', beready_press)
+        button = PlaceButton(text=u'Je suis pr\xeat',
+                        size=(350, 100),
+                        pos=(cx - 350 / 2., cy - 50))
+        button.bind(on_release=beready_press)
         self.container.add_widget(button)
 
     def handle_wait(self, args):
         '''Wait someone
         '''
-        cx, cy = getWindow().center
-        self.container.children = []
+        cx, cy = Window.center
+        self.container.clear_widgets()
         self.container.add_widget(
-            MTLabel(label='Attends les autres joueurs',
-                    cls='font', anchor_x='center',
+            Label(text='Attends les autres joueurs',
+                    font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
-                    size=(getWindow().width, 100)
+                    size=(Window.width, 100)
         ))
         self.container.add_widget(
-            MTLabel(label=args,
-                    cls='font', anchor_x='center',
-                    anchor_y='middle',
-                    pos=(0, cy - 50),
-                    size=(getWindow().width, 100)
+            Label(text=args,
+                  font_size=24, anchor_x='center',
+                  anchor_y='middle',
+                  pos=(0, cy - 50),
+                  size=(Window.width, 100)
         ))
 
 scenario_class = ChooseClient

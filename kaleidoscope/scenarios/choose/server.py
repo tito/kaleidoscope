@@ -12,7 +12,8 @@ class Choose(KalScenarioServer):
     resources = (
         'background.png',
         'myriad.ttf',
-        'client.py'
+        'client.py',
+        'buttonbackground.png'
     )
 
     def __init__(self, *largs):
