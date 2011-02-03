@@ -319,4 +319,16 @@ class KalServerInteractive(MTWidget):
     def on_draw(self):
         if self.controler.game.scenario:
             self.controler.game.scenario.draw()
+        else:
+            from colorsys import hsv_to_rgb
+            from pymt import drawLabel, set_color, drawRectangle, getWindow
+            label = 'Bonjour ! En attente d\'un client...'
+            c = getClock().get_time() % 10
+            drawLabel(label=label, pos=self.center,
+                      font_size=42, color=(1, 1, 1, 1))
+            set_color(*hsv_to_rgb(c / 25., 1, 1))
+            w, h = getWindow().size
+            x = (getClock().get_time() * 200) % 500 + ( w - 500 ) / 2.
+            y = h / 2. - 100
+            drawRectangle(pos=(x, y), size=(10, 10))
         super(KalServerInteractive, self).on_draw()
