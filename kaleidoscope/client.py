@@ -1,11 +1,18 @@
-import time
-import asyncore, asynchat
+import asyncore
+import asynchat
 import socket
-import os, errno
+import os
+import errno
 import hashlib
 import base64
-from pymt import *
 import traceback
+
+from kivy.app import App
+from kivy.core.window import Window
+from kivy.uix.widget import Widget
+from kivy.uix.label import Label
+from kivy.logger import Logger
+from kivy.clock import Clock
 
 class KalCache(object):
     directory = os.path.join(os.path.dirname(__file__), 'cache')
@@ -94,20 +101,20 @@ class KalClientChannel(asynchat.async_chat):
             #self.failed(client, 'Invalid command <%s>' % cmd.lower())
 
     def handle_ok(self, args):
-        self.ui.dispatch_event('on_ok', args)
+        self.ui.dispatch('on_ok', args)
 
     def handle_failed(self, args):
-        self.ui.dispatch_event('on_failed', args)
+        self.ui.dispatch('on_failed', args)
 
     def handle_notify(self, args):
-        self.ui.dispatch_event('on_notify', args)
+        self.ui.dispatch('on_notify', args)
 
     def handle_load(self, args):
-        self.ui.dispatch_event('on_load', args)
+        self.ui.dispatch('on_load', args)
         self.push('STATUS wait requirement\n')
 
     def handle_reset(self, args):
-        self.ui.dispatch_event('on_reset')
+        self.ui.dispatch('on_reset')
         self.scenarioname = ''
         self.scenario = None
 
@@ -167,10 +174,9 @@ class KalClient(asyncore.dispatcher):
         self.ui = ui
         self.connect(self.addr)
         self.reconnect_count = 0
-        getClock().schedule_interval(self.check_try_reconnect, 2.)
+        Clock.schedule_interval(self.check_try_reconnect, 2.)
 
     def handle_connect(self):
-        print 'HADNLE CONNECT'
         self.channel = KalClientChannel(self, self.socket, self.addr, self.ui)
 
     def check_try_reconnect(self, *largs):
@@ -185,11 +191,11 @@ class KalClient(asyncore.dispatcher):
             self.ui.reset()
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.connect(self.addr)
-            self.ui.dispatch_event('on_notify', 'Connexion sur %s (%d)' % (
+            self.ui.dispatch('on_notify', 'Connexion sur %s (%d)' % (
                 self.addr[0], self.reconnect_count))
 
 
-class KalClientInteractive(MTWidget):
+class KalClientInteractive(Widget):
     def __init__(self, **kwargs):
         super(KalClientInteractive, self).__init__(**kwargs)
         self.nickname = kwargs.get('nickname', 'jubei')
@@ -204,10 +210,13 @@ class KalClientInteractive(MTWidget):
 
         self.client = KalClient(self.ip, self.port, self)
         self.logged = False
+        self.display_scenario = None
         self.history = []
+        self.history_label = Label(text='-', font_size=42, size=Window.size)
 
-        getClock().schedule_interval(self.update_loop, 0)
-        self.dispatch_event('on_notify', 'Connexion sur %s' % self.ip)
+        Clock.schedule_interval(self.update_loop, 0)
+        Clock.schedule_interval(self.check_draw, 0)
+        self.dispatch('on_notify', 'Connexion sur %s' % self.ip)
 
     def reset(self):
         self.logged = False
@@ -235,10 +244,33 @@ class KalClientInteractive(MTWidget):
         self.history.append(args)
         if len(self.history) > 4:
             self.history = self.history[1:]
-        pymt_logger.info('Kal: %s' % args)
+        Logger.info('Kal: %s' % args)
+        self.history_label.text = self.history[-1]
 
     def on_load(self, args):
         pass
+
+    def check_draw(self, *largs):
+        if self.display_scenario is None:
+            self.add_widget(self.history_label)
+            self.display_scenario = False
+
+        if self.display_scenario is False:
+            if self.client.channel and self.client.channel.scenario:
+                self.display_scenario = True
+                self.remove_widget(self.history_label)
+                return
+
+        if self.display_scenario is True:
+            if not self.client.channel or not self.client.channel.scenario:
+                self.display_scenario = False
+                self.add_widget(self.history_label)
+                return
+
+    #
+    # Obsolete part
+    #
+    '''
 
     def on_draw(self):
         super(KalClientInteractive, self).on_draw()
@@ -267,3 +299,9 @@ class KalClientInteractive(MTWidget):
         if not hasattr(channel.scenario, 'draw_after'):
             return
         channel.scenario.draw_after()
+    '''
+
+class KalClientInteractiveApp(App):
+    def build(self):
+        size = Window.size
+        return KalClientInteractive(size=size, **self.options)

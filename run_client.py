@@ -7,8 +7,7 @@ def usage():
     sys.exit(0)
 
 if __name__ == '__main__':
-    from pymt import runTouchApp, getWindow
-    from kaleidoscope.client import KalClientInteractive
+    from kaleidoscope.client import KalClientInteractiveApp
     import sys
 
     options = {}
@@ -18,5 +17,5 @@ if __name__ == '__main__':
     options['host'] = sys.argv[1]
     options['nickname'] = sys.argv[2]
 
-    client = KalClientInteractive(size=getWindow().size, **options)
-    runTouchApp(client)
+    client = KalClientInteractiveApp(**options)
+    client.run()
