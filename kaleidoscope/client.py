@@ -53,7 +53,8 @@ class KalCache(object):
 
 class KalClientChannel(asynchat.async_chat):
     def __init__(self, server, sock, addr, ui):
-        asynchat.async_chat.__init__(self, sock)
+        self.server = server
+        self.addr = addr
         self.set_terminator("\n")
         self.request = None
         self.data = ''
@@ -62,6 +63,8 @@ class KalClientChannel(asynchat.async_chat):
         self.scenarioname = ''
         self.ui = ui
         self.require = 0
+        self.try_reconnect = False
+        asynchat.async_chat.__init__(self, sock)
         KalCache.init()
 
     def collect_incoming_data(self, data):
@@ -126,6 +129,7 @@ class KalClientChannel(asynchat.async_chat):
             self.handle_sync(scenarioname)
 
     def handle_sync(self, args):
+        self.server.reconnect_count = 0
         if self.require != 0:
             self.push('STATUS still %s files to download\n' % self.require)
         else:
@@ -141,7 +145,15 @@ class KalClientChannel(asynchat.async_chat):
             self.push('STATUS ready\n')
 
     def handle_error(self):
-        print '<<<<<<<<<<<<<<<<<<<<<< ERROR'
+        if not self.try_reconnect:
+            print 'KalClientChannel socket error'
+            self.try_reconnect = True
+
+    def handle_close(self):
+        if not self.try_reconnect:
+            print 'KalClientChannel socket closed'
+            self.try_reconnect = True
+
     def log(self, message):
         print '<<<<<<<<<<<<<<<<<<<<<!!', message
 
@@ -149,13 +161,33 @@ class KalClient(asyncore.dispatcher):
 
     def __init__(self, host, port, ui):
         asyncore.dispatcher.__init__(self)
+        self.addr = (host, port)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect( (host, port) )
         self.channel = None
         self.ui = ui
+        self.connect(self.addr)
+        self.reconnect_count = 0
+        getClock().schedule_interval(self.check_try_reconnect, 2.)
 
     def handle_connect(self):
+        print 'HADNLE CONNECT'
         self.channel = KalClientChannel(self, self.socket, self.addr, self.ui)
+
+    def check_try_reconnect(self, *largs):
+        if not self.channel:
+            return
+        if self.channel.try_reconnect:
+            print 'Retry to connect on the server (tentative %d)' % self.reconnect_count
+            asyncore.dispatcher.__init__(self)
+            self.reconnect_count += 1
+            self.channel.close()
+            self.channel = None
+            self.ui.reset()
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.connect(self.addr)
+            self.ui.dispatch_event('on_notify', 'Connexion sur %s (%d)' % (
+                self.addr[0], self.reconnect_count))
+
 
 class KalClientInteractive(MTWidget):
     def __init__(self, **kwargs):
@@ -176,6 +208,11 @@ class KalClientInteractive(MTWidget):
 
         getClock().schedule_interval(self.update_loop, 0)
         self.dispatch_event('on_notify', 'Connexion sur %s' % self.ip)
+
+    def reset(self):
+        self.logged = False
+        for child in self.children[:]:
+            self.remove_widget(child)
 
     def update_loop(self, *l):
         asyncore.loop(timeout=0, count=1)
