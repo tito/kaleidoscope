@@ -1,15 +1,28 @@
 from os.path import join, dirname
 from time import time
 from kaleidoscope.scenario import KalScenarioClient
-from pymt import *
-from pymt.parser import parse_color
 from random import random, randint
-from OpenGL.GL import *
-from penta_color import *
+from kivy.core.window import Window
+from kivy.core.image import Image
+from kivy.uix.widget import Widget
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.scatter import Scatter
+from kivy.utils import get_color_from_hex
+from kivy.animation import Animation
+from kivy.uix.anchorlayout import AnchorLayout
+from kivy.properties import StringProperty, NumericProperty
+from kivy.resources import resource_add_path
+from kivy.lang import Builder
+from kivy.graphics import Color, Rectangle
+from kivy.clock import Clock
+from kivy.core.gl import GL_REPEAT
+#from OpenGL.GL import *
 
 # local
 from penta_color import *
 
+"""
 css_add_sheet('''
 pentaminoassembled,
 pentaminosquare {
@@ -34,6 +47,10 @@ pentalistcontainer {
     bg-color-down: rgb(255, 255, 255, 50);
 }
 ''')
+"""
+
+resource_add_path(dirname(__file__))
+Builder.load_file(join(dirname(__file__), 'pentaminos.kv'))
 
 square_background = Image(join(dirname(__file__), 'penta-square.png'))
 square_shadow = Image(join(dirname(__file__), 'penta-square-shadow.png'))
@@ -48,7 +65,7 @@ SQUARE = 100
 SQUARE_MM = 75
 SQUARE_M = 5
 
-class PentaContainer(MTWidget):
+class PentaContainer(Widget):
     def __init__(self, **kwargs):
         super(PentaContainer, self).__init__(**kwargs)
         self.string = None
@@ -62,7 +79,7 @@ class PentaContainer(MTWidget):
             return
 
         if self.color is None:
-            self.color = parse_color(penta_colors[self.pentak])
+            self.color = get_color_from_hex(penta_colors[self.pentak])
 
         step = self.width / 7
         ox, oy = self.pos
@@ -82,12 +99,12 @@ class PentaContainer(MTWidget):
                 y = iy * (step + 1)
                 drawRectangle(pos=(ox + x, oy + y), size=size)
 
-class PentaListContainer(MTBoxLayout):
+class PentaListContainer(BoxLayout):
     def __init__(self, **kwargs):
         kwargs.setdefault('orientation', 'horizontal')
         kwargs.setdefault('invert', True)
         kwargs.setdefault('size_hint', (1, None))
-        w, h = getWindow().size
+        w, h = Window.size
         h = 100
         kwargs.setdefault('height', h)
         kwargs.setdefault('pos', (0, 0))
@@ -103,7 +120,7 @@ class PentaListContainer(MTBoxLayout):
         self.children[self.idx].ph = h
         self.idx += 1
 
-class PentaminoAssembled(MTScatter):
+class PentaminoAssembled(Scatter):
     def __init__(self, key, pw, ph, string, **kwargs):
         kwargs.setdefault('do_scale', False)
         kwargs.setdefault('size', map(lambda x: int(x) * (SQUARE + SQUARE_M) - SQUARE_M, (pw, ph)))
@@ -113,7 +130,7 @@ class PentaminoAssembled(MTScatter):
         self.pw = int(pw)
         self.ph = int(ph)
         self.key = key
-        self.color = parse_color(penta_colors[key])
+        self.color = get_color_from_hex(penta_colors[key])
         self.highlight = None
         self.fit = False
         self.touchorig = (0, 0)
@@ -197,7 +214,7 @@ class PentaminoAssembled(MTScatter):
             self.parent.remove_square(self)
             if touch.is_double_tap:
                 self.reverse()
-            self.do(Animation(scale=1., d=.2, f='ease_out_cubic'))
+            Animation(scale=1., d=.2, t='out_cubic').start(self)
             if len(self._touches) == 1:
                 self.touchorig = self.pos
             return True
@@ -220,8 +237,7 @@ class PentaminoAssembled(MTScatter):
             return
         rot = round(((self.rotation) % 360) / 90) * 90
         #rot = self.rotation - self.rotation % 90
-        self.do(Animation(rotation=rot,
-                          d=.1, f='ease_out_cubic'))
+        Animation(rotation=rot, d=.1, t='out_cubic').start(self)
         if len(self._touches) != 0:
             return
         # ensure that all coords fit in the grid
@@ -244,16 +260,14 @@ class PentaminoAssembled(MTScatter):
             px, py = self.pos
             s2 = SQUARE / 2
             ix, iy = p.position_in_grid(px + s2, py + s2)
-            self.do(Animation(
+            Animation(
                 pos=(p.mx + ix * p.step, p.my + iy * p.step),
-                f='ease_out_cubic', d=.1))
+                t='out_cubic', d=.1).start(self)
         elif len(self._touches) == 0:
             x = self.x
             if x < self.parent.width / 2.:
                 x = self.touchorig[0]
-            self.do(Animation(scale=0.4,
-                              x=x,
-                              d=.2, f='ease_out_cubic'))
+            Animation(scale=0.4, x=x, d=.2, t='out_cubic').start(self)
         self.highlight = None
         return True
 
@@ -281,7 +295,8 @@ class PentaminoAssembled(MTScatter):
                                           pos=(x, y), size=size)
                 '''
 
-class PentaminoSquare(MTScatter):
+class PentaminoSquare(Scatter):
+    drawmode = StringProperty('normal')
     def __init__(self, **kwargs):
         kwargs.setdefault('do_scale', False)
         kwargs.setdefault('do_rotate', False)
@@ -326,14 +341,10 @@ class PentaminoSquare(MTScatter):
         self.parent.drop_square(self, ix, iy)
         self.highlight = None
 
-    def draw(self):
-        set_color(1, blend=True)
-        if self.drawmode == 'shadow':
-            drawTexturedRectangle(texture=square_shadow.texture, size=(SQUARE,SQUARE))
-        else:
-            drawTexturedRectangle(texture=square_background.texture, size=(SQUARE,SQUARE))
 
-class PentaminosContainer(MTWidget):
+class PentaminosContainer(Widget):
+    backy = NumericProperty(-1)
+    btbacky = NumericProperty(0)
     def __init__(self, client, **kwargs):
         super(PentaminosContainer, self).__init__(**kwargs)
         self.client = client
@@ -341,11 +352,11 @@ class PentaminosContainer(MTWidget):
         self.reset()
         self.last_msg = ''
         self.done = []
-        self.backy = -1
         self.gridx = 0
+        self.build_canvas()
 
     def reset(self):
-        self.children.clear()
+        self.clear_widgets()
         self.grid = []
         self.griddone = False
         gw, gh = self.client.gridsize
@@ -413,9 +424,9 @@ class PentaminosContainer(MTWidget):
             return
         grid[ix][iy] = square
         if isinstance(square, PentaminoSquare):
-            square.do(Animation(
+            Animation(
                 pos=(self.mx + ix * self.step, self.my + iy * self.step),
-                f='ease_out_cubic', d=.1))
+                t='out_cubic', d=.1).start(square)
 
     def remove_square(self, square):
         '''Remove a square from the grid
@@ -563,21 +574,48 @@ class PentaminosContainer(MTWidget):
         for x in self.children:
             x.dispatch_event('on_draw')
 
+    def update_graphics(self, *largs):
+        w, h = Window.size
+        b = self.backy - penta_background_bottom.height
+        t = list(penta_background.texture.tex_coords)
+        t[2] = t[4] = w / float(penta_background.width)
+        t[5] = t[7] = b / float(penta_background.height)
+        self.tex1.pos = (0, h - b)
+        self.tex1.size = (w, b)
+        self.tex1.tex_coords = t
+        self.tex2.pos = (0, h - self.backy)
+        self.tex2.size = (w, penta_background_bottom.height)
+
+    def build_canvas(self):
+        Clock.schedule_interval(self.update_graphics, 0)
+        with self.canvas:
+            Color(1, 1, 1)
+            self.tex1 = Rectangle(texture=penta_background.texture)
+            self.tex2 = Rectangle(texture=penta_background_bottom.texture)
+
+            Color(1, 1, 1, .5)
+
+            gw, gh = self.client.gridsize
+            step = self.step
+            mx = self.mx
+            my = self.my
+            s = (SQUARE, SQUARE)
+            y = self.my
+            for iy in xrange(gh):
+                x = mx
+                for ix in xrange(gw):
+                    Rectangle(pos=(x, y), size=s)
+                    x += SQUARE + SQUARE_M
+                y += SQUARE_M + SQUARE
+
+
     def draw(self):
-        w, h = getWindow().size
+        w, h = Window.size
         set_color(1)
         b = self.backy - penta_background_bottom.height
         t = list(penta_background.texture.tex_coords)
         t[2] = t[4] = w / float(penta_background.width)
         t[5] = t[7] = b / float(penta_background.height)
-        drawTexturedRectangle(texture=penta_background.texture,
-                              pos=(0, h - b),
-                              size=(w, b),
-                              tex_coords=t)
-        set_color(1, blend=True)
-        drawTexturedRectangle(texture=penta_background_bottom.texture,
-                              pos=(0, h - self.backy),
-                              size=(w, penta_background_bottom.height))
 
         gw, gh = self.client.gridsize
         step = self.step
@@ -644,7 +682,8 @@ class PentaminosClient(KalScenarioClient):
         x = self.pcontainer.width - 150 - random() * 350
         p = PentaminoAssembled(key, w, h, string,
                           center=(x, y), rotation=r, scale=.0001)
-        p.do(Delay(d=random() * 1) + Animation(scale=.4, f='ease_out_elastic', d=1))
+        (Animation(d=random() * 1) + Animation(scale=.4, t='out_elastic',
+                                               d=1)).start(p)
         self.pcontainer.add_widget(p)
 
     def handle_size(self, args):
@@ -656,23 +695,23 @@ class PentaminosClient(KalScenarioClient):
         self.last_msg = message
 
     def handle_waitready(self, message):
-        self.container.children = []
-        btn = MTLabel(label='En attente...', cls=['pentabtn', 'ready'],
+        self.container.clear_widgets()
+        btn = Label(label='En attente...', cls=['pentabtn', 'ready'],
                 size=(200, 100))
-        anchor = MTAnchorLayout(size=self.container.size)
+        anchor = AnchorLayout(size=self.container.size)
         anchor.add_widget(btn)
         self.container.add_widget(anchor)
 
     def handle_game1(self, args):
-        self.container.children = []
+        self.container.clear_widgets()
         self.gametype = 'game1'
-        self.pcontainer = PentaminosContainer(self, size=getWindow().size)
+        self.pcontainer = PentaminosContainer(self, size=Window.size)
         self.lcontainer = PentaListContainer()
         self.container.add_widget(self.lcontainer)
         self.container.add_widget(self.pcontainer)
 
     def handle_game2(self, args):
-        self.pcontainer.do(Animation(backy=0, d=1.5, f='ease_out_cubic'))
+        Animation(backy=0, d=1.5, t='out_cubic').start(self.pcontainer)
         self.gametype = 'game2'
         self.container.remove_widget(self.lcontainer)
 
@@ -682,23 +721,24 @@ class PentaminosClient(KalScenarioClient):
                 continue
             if x.fit:
                 continue
-            a = Animation(scale=0.0001, d=1.)
-            x.do(a)
+            Animation(scale=0.0001, d=1.).start(x)
 
     def handle_give(self, args):
         pc = self.pcontainer
         if pc.backy == -1:
             pc.backy = 0
-            pc.do(Animation(backy=pc.height - 100, d=1.5, f='ease_out_elastic'))
+            Animation(backy=pc.height - 100, d=1.5,
+                      t='out_elastic').start(pc)
         l = int(args)
         self.count = l
-        w, h = getWindow().size
+        w, h = Window.size
 
         x = (w - (SQUARE + SQUARE_MM) * (l-1)) / 2.
         y = h - SQUARE_MM
         for n in xrange(self.count):
             p = PentaminoSquare(center=(x, y), scale=.0001)
-            p.do(Delay(d=random() * 1) + Animation(scale=1, center=(x, y), f='ease_out_elastic', d=1))
+            (Animation(d=random() * 1) + Animation(scale=1, center=(x, y),
+                                                   t='out_elastic', d=1)).start(p)
             x += SQUARE + SQUARE_MM
             pc.add_widget(p)
 
@@ -714,11 +754,11 @@ class PentaminosClient(KalScenarioClient):
                 self.send('RECTDONE')
 
         set_color(1)
-        w, h = getWindow().size
+        w, h = Window.size
         t = list(background.texture.tex_coords)
         t[2] = t[4] = w / float(background.width)
         t[5] = t[7] = h / float(background.height)
-        drawTexturedRectangle(background.texture, size=getWindow().size,
+        drawTexturedRectangle(background.texture, size=Window.size,
                              tex_coords=t)
 
     def draw_after(self):
@@ -730,7 +770,7 @@ class PentaminosClient(KalScenarioClient):
         else:
             y = 20
 
-        w, h = getWindow().size
+        w, h = Window.size
         set_color(1)
         drawLabel(label=msg, pos=(w / 2., y), center=False,
                   anchor_x='center',

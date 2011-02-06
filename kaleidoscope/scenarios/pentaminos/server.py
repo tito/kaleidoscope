@@ -23,6 +23,7 @@ class Pentaminos(KalScenarioServer):
         'client.py',
         'myriad.ttf',
         'penta_color.py',
+        'pentaminos.kv',
     )
     def __init__(self, *largs):
         super(Pentaminos, self).__init__(*largs)
