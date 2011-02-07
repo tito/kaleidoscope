@@ -222,6 +222,7 @@ class Pentaminos(KalScenarioServer):
             self.state = 'reset_for_game2'
 
     def run_reset_for_game2(self):
+        self.controler.ui.remove_widget(self.pentalist)
         self.send_all('CLEAR')
         self.msg_all('Remplis le rectangle avec les pentaminos')
         self.state = 'game2'

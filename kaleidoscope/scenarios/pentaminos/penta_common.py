@@ -52,13 +52,13 @@ class PentaListContainer(MTBoxLayout):
         kwargs.setdefault('invert', True)
         kwargs.setdefault('size_hint', (None, None))
         w = getWindow().width
-        h = 90
-        kwargs.setdefault('size', (w, h))
-        y = 0
         x = y = 0
+        h = 90
         if kwargs['server']:
-            x = 40
+            x = 10
             y = getWindow().height / 2. - 45
+            h = 74.5
+        kwargs.setdefault('size', (w, h))
         kwargs.setdefault('pos', (x, y))
         super(PentaListContainer, self).__init__(**kwargs)
         count = 6
@@ -72,7 +72,7 @@ class PentaListContainer(MTBoxLayout):
     def add_penta(self, k, penta, w, h):
         # check that penta don't exist yet in our children
         for child in self.children:
-            if child.string == penta:
+            if child.pentak == k:
                 return False
         self.children[self.idx].pentak = k
         self.children[self.idx].string = penta
