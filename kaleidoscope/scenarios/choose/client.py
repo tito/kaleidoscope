@@ -56,7 +56,7 @@ class ChooseClient(KalScenarioClient):
         m = 10
         self.container.children = []
         self.container.add_widget(
-            MTLabel(label='Choisis un emplacement',
+            MTLabel(label='Choisis une couleur',
                     cls='font', anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
@@ -65,9 +65,8 @@ class ChooseClient(KalScenarioClient):
         for idx, px, py in ((1, cx-s-m, cy-s-m), (2, cx+m, cy-s-m),
                             (3, cx-s-m, cy+m), (4, cx+m, cy+m)):
             cls = 'valid' if idx in available else 'notvalid'
-            button = MTButton(label='Place\n%s' % idx,
-                              size=(200, 200), cls=['font', 'placebtn',
-                                                    cls, 'idx%d' % idx],
+            button = MTButton(label='', size=(200, 200),
+                              cls=['font', 'placebtn', cls, 'idx%d' % idx],
                               pos=(px, py))
             self.container.add_widget(button)
 

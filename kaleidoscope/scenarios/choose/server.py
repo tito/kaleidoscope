@@ -2,6 +2,7 @@ from os.path import dirname, join
 from kaleidoscope.scenario import KalScenarioServer
 from OpenGL.GL import GL_REPEAT
 from pymt import *
+from math import cos
 
 MIN_PLAYERS = 1
 
@@ -34,17 +35,28 @@ class Choose(KalScenarioServer):
         drawTexturedRectangle(background.texture, size=getWindow().size,
                              tex_coords=t)
 
+        places = [player['place'] for player in self.players.itervalues()]
+        delta = abs(cos(getClock().get_time() * 3)) * 0.4
+        if 1 in places:
+            self.c1[3] = 0.55 + delta
+        if 2 in places:
+            self.c2[3] = 0.55 + delta
+        if 3 in places:
+            self.c3[3] = 0.55 + delta
+        if 4 in places:
+            self.c4[3] = 0.55 + delta
+
         cx, cy = getWindow().center
         m = 50
         m2 = m * 2
         set_color(*self.c1)
-        drawRoundedRectangle(pos=(m, m), size=(cx - m2, cy - m2))
+        drawRoundedRectangle(pos=(m, m), size=(cx - m2, cy - m2), radius=15)
         set_color(*self.c2)
-        drawRoundedRectangle(pos=(cx + m, m), size=(cx - m2, cy - m2))
+        drawRoundedRectangle(pos=(cx + m, m), size=(cx - m2, cy - m2), radius=15)
         set_color(*self.c3)
-        drawRoundedRectangle(pos=(m, cy + m), size=(cx - m2, cy - m2))
+        drawRoundedRectangle(pos=(m, cy + m), size=(cx - m2, cy - m2), radius=15)
         set_color(*self.c4)
-        drawRoundedRectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
+        drawRoundedRectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2), radius=15)
 
     def start(self):
         super(Choose, self).start()
@@ -113,6 +125,7 @@ class Choose(KalScenarioServer):
         # is the place is available ?
         place = args[0]
         self.players[client]['place'] = int(place)
+        self.controler.metadata[client] = {'place': int(place)}
         self.send_remaining_places()
         if self.selected_scenario is None:
             self.send_to(client, 'SCENARIO')
