@@ -107,3 +107,30 @@ penta_colors = {
     'N': '#2e6766',
     'X': '#e5487a',
 }
+
+from pymt import css_add_sheet
+css_add_sheet('''
+pentaminoassembled,
+pentaminosquare {
+    draw-background: 1;
+    bg-color: rgb(255, 255, 255);
+}
+
+pentalistcontainer {
+    draw-background: 0;
+}
+
+.pentabtn {
+    draw-alpha-background: 0;
+    draw-background: 0;
+    border-color: rgb(255, 255, 255);
+    border-width: 2;
+    font-size: 24;
+    color: rgb(255, 255, 255);
+    border-color-down: rgb(255, 255, 255);
+    border-width-down: 4;
+    draw-background-down: 1;
+    bg-color-down: rgb(255, 255, 255, 50);
+}
+''')
+

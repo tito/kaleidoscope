@@ -1,3 +1,8 @@
+from pymt import *
+from pymt.parser import parse_color
+from random import random, randint
+from OpenGL.GL import *
+from penta_color import *
 from os.path import join, dirname
 from time import time
 from kaleidoscope.scenario import KalScenarioClient
@@ -6,34 +11,7 @@ from pymt.parser import parse_color
 from random import random, randint
 from OpenGL.GL import *
 from penta_color import *
-
-# local
-from penta_color import *
-
-css_add_sheet('''
-pentaminoassembled,
-pentaminosquare {
-    draw-background: 1;
-    bg-color: rgb(255, 255, 255);
-}
-
-pentalistcontainer {
-    draw-background: 0;
-}
-
-.pentabtn {
-    draw-alpha-background: 0;
-    draw-background: 0;
-    border-color: rgb(255, 255, 255);
-    border-width: 2;
-    font-size: 24;
-    color: rgb(255, 255, 255);
-    border-color-down: rgb(255, 255, 255);
-    border-width-down: 4;
-    draw-background-down: 1;
-    bg-color-down: rgb(255, 255, 255, 50);
-}
-''')
+from penta_common import PentaContainer, PentaListContainer
 
 square_background = Image(join(dirname(__file__), 'penta-square.png'))
 square_shadow = Image(join(dirname(__file__), 'penta-square-shadow.png'))
@@ -47,61 +25,6 @@ myriad_fontname = join(dirname(__file__), 'myriad.ttf')
 SQUARE = 100
 SQUARE_MM = 75
 SQUARE_M = 5
-
-class PentaContainer(MTWidget):
-    def __init__(self, **kwargs):
-        super(PentaContainer, self).__init__(**kwargs)
-        self.string = None
-        self.pw = 0
-        self.ph = 0
-        self.pentak = ''
-        self.color = None
-
-    def draw(self):
-        if not self.string:
-            return
-
-        if self.color is None:
-            self.color = parse_color(penta_colors[self.pentak])
-
-        step = self.width / 7
-        ox, oy = self.pos
-
-        set_color(*self.color)
-        size = (step, step)
-        pw = self.pw
-        ph = self.ph
-        s = self.string
-        ox += step + (step * (5 - pw)) / 2.
-        oy += step + (step * (5 - ph)) / 2.
-        for ix in xrange(pw):
-            for iy in xrange(ph):
-                if s[iy * pw + ix] != '1':
-                    continue
-                x = ix * (step + 1)
-                y = iy * (step + 1)
-                drawRectangle(pos=(ox + x, oy + y), size=size)
-
-class PentaListContainer(MTBoxLayout):
-    def __init__(self, **kwargs):
-        kwargs.setdefault('orientation', 'horizontal')
-        kwargs.setdefault('invert', True)
-        kwargs.setdefault('size_hint', (1, None))
-        w, h = getWindow().size
-        h = 100
-        kwargs.setdefault('height', h)
-        kwargs.setdefault('pos', (0, 0))
-        super(PentaListContainer, self).__init__(**kwargs)
-        for x in xrange(6):
-            self.add_widget(PentaContainer(size=(h, h)))
-        self.idx = 0
-
-    def add_penta(self, k, penta, w, h):
-        self.children[self.idx].pentak = k
-        self.children[self.idx].string = penta
-        self.children[self.idx].pw = w
-        self.children[self.idx].ph = h
-        self.idx += 1
 
 class PentaminoAssembled(MTScatter):
     def __init__(self, key, pw, ph, string, **kwargs):
@@ -662,6 +585,10 @@ class PentaminosClient(KalScenarioClient):
         anchor = MTAnchorLayout(size=self.container.size)
         anchor.add_widget(btn)
         self.container.add_widget(anchor)
+
+    def handle_cancel(self, args):
+        self.lcontainer.remove_last()
+        self.pcontainer.done.remove(args)
 
     def handle_game1(self, args):
         self.container.children = []

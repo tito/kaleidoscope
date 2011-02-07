@@ -155,6 +155,7 @@ class KalControler(object):
         self.ui = None
         self.clients = {}
         self.waitclients = {}
+        self.metadata = {}
         self.game = KalGameControler(self)
 
     def get_client_name(self, client):

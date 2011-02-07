@@ -4,6 +4,8 @@ from time import time
 from penta_color import penta_schemes
 from OpenGL.GL import GL_REPEAT
 from pymt import *
+from math import cos
+from penta_common import PentaListContainer
 
 TIMER = 60 * 2
 PENTAMINOS_SIZE = 5, 3
@@ -23,11 +25,16 @@ class Pentaminos(KalScenarioServer):
         'client.py',
         'myriad.ttf',
         'penta_color.py',
+        'penta_common.py'
     )
     def __init__(self, *largs):
         super(Pentaminos, self).__init__(*largs)
         self.timeout = 0
         self.timemsg = 0
+        self.c1 = get_color_from_hex('#96be25aa')
+        self.c2 = get_color_from_hex('#e6461faa')
+        self.c3 = get_color_from_hex('#81cac8aa')
+        self.c4 = get_color_from_hex('#7f398baa')
         self.players = {}
 
         # init client table
@@ -37,6 +44,7 @@ class Pentaminos(KalScenarioServer):
                 'name': self.controler.get_client_name(client),
                 'ready': False,
                 'done': False,
+                'place': self.controler.metadata[client]['place'],
                 'pentaminos': []
             }
 
@@ -46,6 +54,10 @@ class Pentaminos(KalScenarioServer):
         ui = self.controler.ui
         ui.children = []
 
+        self.pentalist = PentaListContainer(server=True)
+        ui.add_widget(self.pentalist)
+
+        return
         # Top
         self.l1 = label = MTLabel(label=u'Assemble les 5 carr\xe9s dans la grille pour'
                         u'former un Pentamino', autowidth=True,
@@ -71,13 +83,14 @@ class Pentaminos(KalScenarioServer):
         ui.add_widget(m1)
 
     def _set_label(self, label):
+        return
         self.l1.label = label
         self.l2.label = label
         self.l1.on_update()
         m1 = self.m1
         m1.size = self.l1.size
         m1.center = getWindow().center
-        m1.y += 15
+        m1.y -= 15
         m1 = self.m2
         m1.size = self.l1.size
         m1.center = getWindow().center
@@ -94,6 +107,26 @@ class Pentaminos(KalScenarioServer):
         t[5] = t[7] = h / float(background.height)
         drawTexturedRectangle(background.texture, size=getWindow().size,
                              tex_coords=t)
+
+        places = [player['place'] for player in self.players.itervalues()]
+        delta = abs(cos(getClock().get_time() * 3)) * 0.4
+
+        cx, cy = getWindow().center
+        m = 50
+        m2 = m * 2
+        if 1 in places:
+            set_color(*self.c1)
+            drawRoundedRectangle(pos=(m, m), size=(cx - m2, cy - m2), radius=15)
+        if 2 in places:
+            set_color(*self.c2)
+            drawRoundedRectangle(pos=(cx + m, m), size=(cx - m2, cy - m2), radius=15)
+        if 3 in places:
+            set_color(*self.c3)
+            drawRoundedRectangle(pos=(m, cy + m), size=(cx - m2, cy - m2), radius=15)
+        if 4 in places:
+            set_color(*self.c4)
+            drawRoundedRectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2), radius=15)
+
 
     def client_login(self, client):
         self.players[client]['ready'] = True
@@ -119,6 +152,11 @@ class Pentaminos(KalScenarioServer):
             return
         key, w, h, penta = args
         w, h = map(int, (w, h))
+        if self.pentalist.add_penta(key, penta, w, h) is False:
+            self.send_to(client, 'CANCEL %s' % key)
+            self.send_to(client, 'GIVE 5')
+            self.send_to(client, 'MSG Le pentaminos existe, trouve en un autre !')
+            return
         print '# Add pentamino %s from %s to the list' % (key, client.addr)
         self.players[client]['pentaminos'].append((key, w, h, penta))
         left = PENTAMINOS_COUNT_BY_USERS - len(self.players[client]['pentaminos'])
