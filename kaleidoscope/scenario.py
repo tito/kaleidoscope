@@ -3,13 +3,12 @@ import os
 import hashlib
 
 class KalScenarioServer(object):
-    def __init__(self, game):
+    def __init__(self, controler):
         super(KalScenarioServer, self).__init__()
         self.state = 'idle'
         self.running = False
-        self.game = game
-        self.clients = game
-        self.controler = self.game.controler
+        self.controler = controler
+        self.clients = controler.clients
 
     def sha224(self, resource):
         '''Do the md5 of a resource inside the scenario

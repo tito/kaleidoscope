@@ -1,0 +1,16 @@
+#:kivy 1.0
+#:import c kivy.clock
+
+<KalServerScreenWait>:
+    canvas:
+        Color:
+            hsv: (self.time % 10.) / 25., 1, 1
+        Rectangle:
+            size: 10, 10
+            pos: (self.time * 200) % 500 + (self.width - 500) / 2., self.height / 2. - 100
+
+    Label:
+        text: 'Bonjour ! En attente d\'un client ...'
+        text_size: self.size
+        halign: 'center'
+        font_size: 36

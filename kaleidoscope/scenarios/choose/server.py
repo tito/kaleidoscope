@@ -1,12 +1,44 @@
 from os.path import dirname, join
 from kaleidoscope.scenario import KalScenarioServer
-from OpenGL.GL import GL_REPEAT
-from pymt import *
+
+from kivy.utils import get_color_from_hex
+from kivy.core.image import Image
 
 MIN_PLAYERS = 1
 
 background = Image(join(dirname(__file__), 'background.png'))
-background.texture.wrap = GL_REPEAT
+background.texture.wrap = 'wrap'
+
+from kivy.uix.floatlayout import FloatLayout
+from kivy.graphics import Color, Rectangle
+from kivy.core.window import Window
+
+class ChooseView(FloatLayout):
+    def __init__(self, **kwargs):
+        super(ChooseView, self).__init__(**kwargs)
+        c1 = get_color_from_hex('#96be25aa')
+        c2 = get_color_from_hex('#e6461faa')
+        c3 = get_color_from_hex('#81cac8aa')
+        c4 = get_color_from_hex('#7f398baa')
+
+        t = list(background.texture.tex_coords)
+        t[2] = t[4] = Window.width / float(background.width)
+        t[5] = t[7] = Window.height / float(background.height)
+        cx, cy = Window.center
+        m = 50
+        m2 = m * 2
+        size = Window.size
+        with self.canvas:
+            Color(1, 1, 1)
+            Rectangle(texture=background.texture, size=size, tex_coords=t)
+            Color(*c1)
+            Rectangle(pos=(m, m), size=(cx - m2, cy - m2))
+            Color(*c2)
+            Rectangle(pos=(cx + m, m), size=(cx - m2, cy - m2))
+            Color(*c3)
+            Rectangle(pos=(m, cy + m), size=(cx - m2, cy - m2))
+            Color(*c4)
+            Rectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
 
 class Choose(KalScenarioServer):
     resources = (
@@ -20,32 +52,7 @@ class Choose(KalScenarioServer):
         super(Choose, self).__init__(*largs)
         self.players = {}
         self.selected_scenario = None
-        self.c1 = get_color_from_hex('#96be25aa')
-        self.c2 = get_color_from_hex('#e6461faa')
-        self.c3 = get_color_from_hex('#81cac8aa')
-        self.c4 = get_color_from_hex('#7f398baa')
-        self.controler.ui.children = []
-
-    def draw(self):
-        set_color(1)
-        w, h = getWindow().size
-        t = list(background.texture.tex_coords)
-        t[2] = t[4] = w / float(background.width)
-        t[5] = t[7] = h / float(background.height)
-        drawTexturedRectangle(background.texture, size=getWindow().size,
-                             tex_coords=t)
-
-        cx, cy = getWindow().center
-        m = 50
-        m2 = m * 2
-        set_color(*self.c1)
-        drawRoundedRectangle(pos=(m, m), size=(cx - m2, cy - m2))
-        set_color(*self.c2)
-        drawRoundedRectangle(pos=(cx + m, m), size=(cx - m2, cy - m2))
-        set_color(*self.c3)
-        drawRoundedRectangle(pos=(m, cy + m), size=(cx - m2, cy - m2))
-        set_color(*self.c4)
-        drawRoundedRectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
+        self.controler.app.show(ChooseView())
 
     def start(self):
         super(Choose, self).start()
@@ -137,7 +144,7 @@ class Choose(KalScenarioServer):
         if self.controler.waitclients:
             for client in self.controler.waitclients:
                 self.controler.clients[client] = self.controler.waitclients[client]
-                self.controler.game.load(client)
+                self.controler.load(client)
             self.controler.waitclients = {}
         if len(self.players) < 1:
             return
@@ -158,11 +165,11 @@ class Choose(KalScenarioServer):
                 self.client_logout(client)
                 self.controler.reset(client)
 
-        self.controler.game.switch_scenario(self.selected_scenario)
+        self.controler.switch_scenario(self.selected_scenario)
         for client in self.players.keys()[:]:
             infos = self.players[client]
             if infos['place'] == -1:
                 continue
-            self.controler.game.load(client)
+            self.controler.load(client)
 
 scenario_class = Choose
