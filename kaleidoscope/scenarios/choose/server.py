@@ -1,8 +1,9 @@
 from os.path import dirname, join
 from kaleidoscope.scenario import KalScenarioServer
-
 from kivy.utils import get_color_from_hex
 from kivy.core.image import Image
+from kivy.clock import Clock
+from math import cos
 
 MIN_PLAYERS = 1
 
@@ -31,13 +32,13 @@ class ChooseView(FloatLayout):
         with self.canvas:
             Color(1, 1, 1)
             Rectangle(texture=background.texture, size=size, tex_coords=t)
-            Color(*c1)
+            self.c1 = Color(*c1)
             Rectangle(pos=(m, m), size=(cx - m2, cy - m2))
-            Color(*c2)
+            self.c2 = Color(*c2)
             Rectangle(pos=(cx + m, m), size=(cx - m2, cy - m2))
-            Color(*c3)
+            self.c3 = Color(*c3)
             Rectangle(pos=(m, cy + m), size=(cx - m2, cy - m2))
-            Color(*c4)
+            self.c4 = Color(*c4)
             Rectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
 
 class Choose(KalScenarioServer):
@@ -52,7 +53,21 @@ class Choose(KalScenarioServer):
         super(Choose, self).__init__(*largs)
         self.players = {}
         self.selected_scenario = None
-        self.controler.app.show(ChooseView())
+        self.view = ChooseView()
+        self.controler.app.show(self.view)
+        Clock.schedule_once(self._update_color, 1 / 30.)
+
+    def _update_color(self, dt):
+        places = [player['place'] for player in self.players.itervalues()]
+        delta = abs(cos(Clock.get_time() * 3)) * 0.4
+        if 1 in places:
+            self.view.c1.alpha = 0.55 + delta
+        if 2 in places:
+            self.view.c2.alpha = 0.55 + delta
+        if 3 in places:
+            self.view.c3.alpha = 0.55 + delta
+        if 4 in places:
+            self.view.c4.alpha = 0.55 + delta
 
     def start(self):
         super(Choose, self).start()
@@ -121,6 +136,7 @@ class Choose(KalScenarioServer):
         # is the place is available ?
         place = args[0]
         self.players[client]['place'] = int(place)
+        self.controler.metadata[client] = {'place': int(place)}
         self.send_remaining_places()
         if self.selected_scenario is None:
             self.send_to(client, 'SCENARIO')

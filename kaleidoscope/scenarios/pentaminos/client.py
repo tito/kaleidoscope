@@ -1,7 +1,13 @@
+from pymt import *
+from pymt.parser import parse_color
+from random import random, randint
+from OpenGL.GL import *
+from penta_color import *
 from os.path import join, dirname
 from time import time
 from kaleidoscope.scenario import KalScenarioClient
 from random import random, randint
+
 from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.uix.widget import Widget
@@ -701,6 +707,10 @@ class PentaminosClient(KalScenarioClient):
         anchor = AnchorLayout(size=self.container.size)
         anchor.add_widget(btn)
         self.container.add_widget(anchor)
+
+    def handle_cancel(self, args):
+        self.lcontainer.remove_last()
+        self.pcontainer.done.remove(args)
 
     def handle_game1(self, args):
         self.container.clear_widgets()
