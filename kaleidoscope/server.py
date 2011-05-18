@@ -11,10 +11,13 @@ import asyncore, asynchat
 import socket
 import base64
 
+from kaleidoscope import config
+
 from kivy.clock import Clock
 from kivy.app import App
+from kivy.uix.floatlayout import FloatLayout
+from kivy.properties import NumericProperty
 
-from kaleidoscope import config
 
 class KalControler(object):
     '''Network controler.
@@ -166,7 +169,7 @@ class KalControler(object):
                 print '# All clients have leaved, reset to idle.'
                 self.state = 'idle'
                 # XXX FIXME
-                #self.controler.ui.children = []
+                self.app.show()
                 self.reset_game()
 
         try:
@@ -310,9 +313,6 @@ class KalServer(asyncore.dispatcher):
         print '# Client connected', addr
         KalServerChannel(self, conn, addr)
 
-from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import NumericProperty
-
 class KalServerScreenWait(FloatLayout):
     time = NumericProperty(0)
 
@@ -342,7 +342,7 @@ class KalServerApp(App):
         asyncore.loop(timeout=0, count=1)
         KalControler.instance().tick_state_machine()
 
-    def show(self, widget):
+    def show(self, widget=None):
         self.root.clear_widgets()
         if widget:
             self.root.add_widget(widget)
