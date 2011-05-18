@@ -35,6 +35,7 @@ class KalControler(object):
         self.running = False
         self.state = 'idle'
         self.clientcount = 0
+        self.metadata = {}
         self.clients = {}
         self.waitclients = {}
         self.reset_game()

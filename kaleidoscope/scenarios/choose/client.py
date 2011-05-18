@@ -54,6 +54,14 @@ Builder.load_string('''
             source: 'buttonbackground.png'
             pos: self.pos
             size: self.size
+    canvas:
+        Clear
+        Color:
+            rgba: self.color
+        Rectangle:
+            texture: self.texture
+            size: self.texture_size
+            pos: int(self.center_x - self.texture_size[0] / 2.), int(self.center_y - self.texture_size[1] / 2.)
 ''')
 
 class PlaceButton(Button):
@@ -82,18 +90,17 @@ class ChooseClient(KalScenarioClient):
         m = 10
         self.container.clear_widgets()
         self.container.add_widget(
-            MTLabel(label='Choisis une couleur',
-                    cls='font', anchor_x='center',
+            Label(text='Choisis une couleur',
+                    font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
-                    size=(getWindow().width, 100)
+                    size=(Window.width, 100)
         ))
         for idx, px, py in ((1, cx-s-m, cy-s-m), (2, cx+m, cy-s-m),
                             (3, cx-s-m, cy+m), (4, cx+m, cy+m)):
-            cls = 'valid' if idx in available else 'notvalid'
-            button = MTButton(label='', size=(200, 200),
-                              cls=['font', 'placebtn', cls, 'idx%d' % idx],
-                              pos=(px, py))
+            valid = idx in available
+            button = PlaceButton(text='', size=(200, 200),
+                              pos=(px, py), idx=idx)
             self.container.add_widget(button)
 
             if not valid:
