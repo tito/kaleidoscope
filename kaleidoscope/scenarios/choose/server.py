@@ -7,7 +7,7 @@ from kivy.core.image import Image
 MIN_PLAYERS = 1
 
 background = Image(join(dirname(__file__), 'background.png'))
-background.texture.wrap = 'wrap'
+background.texture.wrap = 'repeat'
 
 from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import Color, Rectangle
