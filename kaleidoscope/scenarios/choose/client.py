@@ -12,35 +12,6 @@ from functools import partial
 #background = Image(join(dirname(__file__), 'background.png'))
 #myriad_fontname = join(dirname(__file__), 'myriad.ttf')
 
-"""
-css_add_sheet('''
-.font {
-    font-size: 24;
-}
-
-.placebtn {
-    draw-alpha-background: 0;
-    draw-background: 1;
-    border-color: rgb(255, 255, 255, 126);
-    border-width: 2;
-    color: rgb(255, 255, 255);
-    border-color-down: rgb(255, 255, 126);
-    border-width-down: 4;
-    draw-background-down: 1;
-    bg-color-down: rgb(255, 255, 255, 50);
-}
-
-.idx1 { bg-color: #96be25; }
-.idx2 { bg-color: #e6461f; }
-.idx3 { bg-color: #81cac8; }
-.idx4 { bg-color: #7f398b; }
-
-.notvalid {
-    draw-background: 0;
-}
-''')
-"""
-
 resource_add_path(dirname(__file__))
 
 Builder.load_string('''

@@ -55,19 +55,19 @@ class Choose(KalScenarioServer):
         self.selected_scenario = None
         self.view = ChooseView()
         self.controler.app.show(self.view)
-        Clock.schedule_once(self._update_color, 1 / 30.)
+        Clock.schedule_interval(self._update_color, 1 / 30.)
 
     def _update_color(self, dt):
         places = [player['place'] for player in self.players.itervalues()]
         delta = abs(cos(Clock.get_time() * 3)) * 0.4
         if 1 in places:
-            self.view.c1.alpha = 0.55 + delta
+            self.view.c1.a = 0.55 + delta
         if 2 in places:
-            self.view.c2.alpha = 0.55 + delta
+            self.view.c2.a = 0.55 + delta
         if 3 in places:
-            self.view.c3.alpha = 0.55 + delta
+            self.view.c3.a = 0.55 + delta
         if 4 in places:
-            self.view.c4.alpha = 0.55 + delta
+            self.view.c4.a = 0.55 + delta
 
     def start(self):
         super(Choose, self).start()
