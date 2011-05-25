@@ -9,9 +9,10 @@ MIN_PLAYERS = 1
 
 background = Image(join(dirname(__file__), 'background.png'))
 background.texture.wrap = 'repeat'
+btnbg = Image(join(dirname(__file__), 'buttonbackground.png')).texture
 
 from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import Color, Rectangle, BorderImage
 from kivy.core.window import Window
 
 class ChooseView(FloatLayout):
@@ -33,13 +34,13 @@ class ChooseView(FloatLayout):
             Color(1, 1, 1)
             Rectangle(texture=background.texture, size=size, tex_coords=t)
             self.c1 = Color(*c1)
-            Rectangle(pos=(m, m), size=(cx - m2, cy - m2))
+            BorderImage(texture=btnbg, pos=(m, m), size=(cx - m2, cy - m2))
             self.c2 = Color(*c2)
-            Rectangle(pos=(cx + m, m), size=(cx - m2, cy - m2))
+            BorderImage(texture=btnbg, pos=(cx + m, m), size=(cx - m2, cy - m2))
             self.c3 = Color(*c3)
-            Rectangle(pos=(m, cy + m), size=(cx - m2, cy - m2))
+            BorderImage(texture=btnbg, pos=(m, cy + m), size=(cx - m2, cy - m2))
             self.c4 = Color(*c4)
-            Rectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
+            BorderImage(texture=btnbg, pos=(cx + m, cy + m), size=(cx - m2, cy - m2))
 
 class Choose(KalScenarioServer):
     resources = (
