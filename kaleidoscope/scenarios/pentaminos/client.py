@@ -56,6 +56,8 @@ class PentaminoAssembled(Scatter):
         self.fit = False
         self.touchorig = (0, 0)
 
+        self.build_canvas()
+
     def turn_left(self, coords, orientation):
         if orientation == 0:
             return coords
@@ -192,6 +194,23 @@ class PentaminoAssembled(Scatter):
         self.highlight = None
         return True
 
+    def build_canvas(self):
+        size = (SQUARE, SQUARE)
+        pw = self.pw
+        ph = self.ph
+        s = self.string
+        self.canvas.clear()
+        with self.canvas:
+            Color(*self.color)
+            for ix in xrange(pw):
+                for iy in xrange(ph):
+                    if s[iy * pw + ix] != '1':
+                        continue
+                    x = ix * (SQUARE + SQUARE_M)
+                    y = iy * (SQUARE + SQUARE_M)
+                    Rectangle(pos=(x, y), size=size)
+
+
     """
     def draw(self):
         if self.drawmode == 'shadow':
@@ -272,11 +291,10 @@ class PentaminosContainer(Widget):
         super(PentaminosContainer, self).__init__(**kwargs)
         self.client = client
         gw, gh = self.client.gridsize
-        self.reset()
         self.last_msg = ''
         self.done = []
         self.gridx = 0
-        self.build_canvas()
+        self.reset()
 
     def reset(self):
         self.clear_widgets()
@@ -287,6 +305,7 @@ class PentaminosContainer(Widget):
             self.grid.append([])
             for y in xrange(gh):
                 self.grid[-1].append(None)
+        self.build_canvas()
 
     def on_size(self, instance, value):
         if not hasattr(self, 'rects'):
@@ -514,12 +533,37 @@ class PentaminosContainer(Widget):
 
         for key, r in self.rects.iteritems():
             ix, iy = key
-            r.pos = (self.mx + (ix * (SQUARE + SQUARE_M)),
+            hr = self.hrects[key]
+            hr.pos = r.pos = (self.mx + (ix * (SQUARE + SQUARE_M)),
                      self.my + (iy * (SQUARE + SQUARE_M)))
 
+        grid = self.grid
+        gw, gh = self.client.gridsize
+        colors = self.colors
+        transparent = (0, 0, 0, 0)
+        for x in self.colors.itervalues():
+            x.rgba = transparent
+        for x in self.children:
+            if not x.highlight:
+                continue
+            for idx in x.highlight:
+                ix, iy = idx
+                if idx in colors:
+                    color = colors[idx]
+                    if ix < 0 or ix >= gw or iy < 0 or iy >= gh:
+                        color.rgba = transparent
+                        continue
+                    if grid[ix][iy] is None:
+                        color.rgba = (.9, .9, .9, .7)
+                    else:
+                        color.rgba = (1, .2, .2, .7)
+
     def build_canvas(self):
+        self.canvas.clear()
         Clock.schedule_interval(self.update_graphics, 0)
         self.rects = {}
+        self.colors = {}
+        self.hrects = {}
         with self.canvas:
             Color(1, 1, 1)
             self.tex1 = Rectangle(texture=penta_background.texture)
@@ -536,56 +580,24 @@ class PentaminosContainer(Widget):
             for iy in xrange(gh):
                 x = mx
                 for ix in xrange(gw):
-                    r = Rectangle(pos=(x, y), size=s)
-                    self.rects[(ix, iy)] = r
+                    idx = (ix, iy)
+                    # border rectangle
+                    self.rects[idx] = Rectangle(pos=(x, y), size=s)
+                    # move x
                     x += SQUARE + SQUARE_M
                 y += SQUARE_M + SQUARE
 
-
-    """
-    def draw(self):
-        w, h = Window.size
-        set_color(1)
-        b = self.backy - penta_background_bottom.height
-        t = list(penta_background.texture.tex_coords)
-        t[2] = t[4] = w / float(penta_background.width)
-        t[5] = t[7] = b / float(penta_background.height)
-
-        gw, gh = self.client.gridsize
-        step = self.step
-        mx = self.mx
-        my = self.my
-        s = (SQUARE, SQUARE)
-        y = self.my
-        set_color(1, 1, 1, .5)
-        for iy in xrange(gh):
-            x = mx
-            for ix in xrange(gw):
-                drawRectangle(pos=(x, y), size=s, style=GL_LINE_LOOP)
-                x += SQUARE + SQUARE_M
-            y += SQUARE_M + SQUARE
-
-    def draw_after(self):
-        '''Draw highlights
-        '''
-        gw, gh = self.client.gridsize
-        s = (SQUARE, SQUARE)
-        grid = self.grid
-        step = self.step
-        mx = self.mx
-        my = self.my
-        for x in self.children:
-            if not x.highlight:
-                continue
-            for ix, iy in x.highlight:
-                if ix < 0 or ix >= gw or iy < 0 or iy >= gh:
-                    continue
-                if grid[ix][iy] is None:
-                    set_color(.9, .9, .9, .7)
-                else:
-                    set_color(1, .2, .2, .7)
-                drawRectangle(pos=(mx + ix * step, my + iy * step), size=s)
-    """
+            for iy in xrange(gh):
+                x = mx
+                for ix in xrange(gw):
+                    idx = (ix, iy)
+                    # color
+                    self.colors[idx] = Color(0, 0, 0, 0)
+                    # possible highlight
+                    self.hrects[idx] = Rectangle(pos=(x, y), size=s)
+                    # move x
+                    x += SQUARE + SQUARE_M
+                y += SQUARE_M + SQUARE
 
 
 class PentaminosClient(KalScenarioClient):
