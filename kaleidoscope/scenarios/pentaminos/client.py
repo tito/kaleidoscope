@@ -129,6 +129,19 @@ class PentaminoAssembled(Scatter):
         print self.pw, self.ph, self.string, '=>', ''.join(out)
         self.string = ''.join(out)
 
+    def collide_point(self, x, y):
+        '''Collide only where the pentaminos is filled, not in blank.
+        '''
+        x, y = self.to_local(x, y)
+        if x < 0 or y < 0:
+            return False
+        size = SQUARE + SQUARE_M
+        ix = int(x / size)
+        iy = int(y / size)
+        pw = self.pw
+        if ix < 0 or ix >= pw or iy < 0 or iy >= self.ph:
+            return False
+        return self.string[iy * pw + ix] == '1'
 
     def on_touch_down(self, touch):
         '''Remove the square in the grid if exist
@@ -548,15 +561,16 @@ class PentaminosContainer(Widget):
                 continue
             for idx in x.highlight:
                 ix, iy = idx
-                if idx in colors:
-                    color = colors[idx]
-                    if ix < 0 or ix >= gw or iy < 0 or iy >= gh:
-                        color.rgba = transparent
-                        continue
-                    if grid[ix][iy] is None:
-                        color.rgba = (.9, .9, .9, .7)
-                    else:
-                        color.rgba = (1, .2, .2, .7)
+                if idx not in colors:
+                    continue
+                color = colors[idx]
+                if ix < 0 or ix >= gw or iy < 0 or iy >= gh:
+                    color.rgba = transparent
+                    continue
+                if grid[ix][iy] is None:
+                    color.rgba = (.9, .9, .9, .7)
+                else:
+                    color.rgba = (1, .2, .2, .7)
 
     def build_canvas(self):
         self.canvas.clear()
