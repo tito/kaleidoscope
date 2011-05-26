@@ -172,12 +172,15 @@ class KalClient(asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.channel = None
         self.ui = ui
-        self.connect(self.addr)
         self.reconnect_count = 0
         Clock.schedule_interval(self.check_try_reconnect, 2.)
+        self.connect(self.addr)
 
     def handle_connect(self):
         self.channel = KalClientChannel(self, self.socket, self.addr, self.ui)
+
+    def handle_error(self):
+        pass
 
     def check_try_reconnect(self, *largs):
         if not self.channel:
@@ -222,6 +225,7 @@ class KalClientInteractive(Widget):
         self.logged = False
         for child in self.children[:]:
             self.remove_widget(child)
+        self.display_scenario = None
 
     def update_loop(self, *l):
         asyncore.loop(timeout=0, count=1)
