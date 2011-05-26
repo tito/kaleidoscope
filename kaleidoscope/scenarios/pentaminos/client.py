@@ -16,7 +16,7 @@ from kivy.uix.anchorlayout import AnchorLayout
 from kivy.properties import StringProperty, NumericProperty
 from kivy.resources import resource_add_path
 from kivy.lang import Builder
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import Color, Rectangle, Ellipse
 from kivy.clock import Clock
 
 # local
@@ -308,6 +308,7 @@ class PentaminosContainer(Widget):
         self.done = []
         self.gridx = 0
         self.reset()
+        Clock.schedule_interval(self.update_graphics_timer, 1 / 10.)
 
     def reset(self):
         self.clear_widgets()
@@ -572,6 +573,12 @@ class PentaminosContainer(Widget):
                 else:
                     color.rgba = (1, .2, .2, .7)
 
+    def update_graphics_timer(self, *largs):
+        if not self.g_timer:
+            return
+        d = max(0, 1 - ((self.client.timeout - time()) / self.client.timeoutl))
+        self.g_timer.angle_end = 360 * d
+
     def build_canvas(self):
         self.canvas.clear()
         Clock.schedule_interval(self.update_graphics, 0)
@@ -579,12 +586,25 @@ class PentaminosContainer(Widget):
         self.colors = {}
         self.hrects = {}
         with self.canvas:
+
+            # background
             Color(1, 1, 1)
             self.tex1 = Rectangle(texture=penta_background.texture)
             self.tex2 = Rectangle(texture=penta_background_bottom.texture)
 
-            Color(1, 1, 1, .5)
+            # timer
+            pos = (25, 25)
+            radius = 25
+            Ellipse(pos=pos, size=(radius * 2, radius * 2),
+                    segments=40)
+            Color(.4588, .7098, .2784)
+            d = max(0, 1 - ((self.client.timeout - time()) / self.client.timeoutl))
+            self.g_timer = Ellipse(
+                pos=pos, size=(radius * 2, radius * 2),
+                angle_end=360 * d, segments=40)
 
+            # grid
+            Color(1, 1, 1, .5)
             gw, gh = self.client.gridsize
             step = self.step
             mx = self.mx
