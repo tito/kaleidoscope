@@ -9,8 +9,7 @@ import traceback
 
 from kivy.app import App
 from kivy.core.window import Window
-from kivy.uix.widget import Widget
-from kivy.uix.label import Label
+from kivy.uix.floatlayout import FloatLayout
 from kivy.logger import Logger
 from kivy.clock import Clock
 
@@ -182,6 +181,13 @@ class KalClient(asyncore.dispatcher):
     def handle_error(self):
         pass
 
+    def close(self):
+        Clock.unschedule(self.check_try_reconnect)
+        if self.channel:
+            self.channel.close()
+        self.channel = None
+        return asyncore.dispatcher.close(self)
+
     def check_try_reconnect(self, *largs):
         if not self.channel:
             return
@@ -198,10 +204,21 @@ class KalClient(asyncore.dispatcher):
                 self.addr[0], self.reconnect_count))
 
 
-class KalClientInteractive(Widget):
+from kivy.properties import StringProperty, NumericProperty, ObjectProperty
+class KPanelIdentity(FloatLayout):
+    ctrl = ObjectProperty(None)
+    host = StringProperty('127.0.0.1')
+    port = NumericProperty(6464)
+    nickname = StringProperty('noname')
+
+class KPanelConnect(FloatLayout):
+    ctrl = ObjectProperty(None)
+    text = StringProperty('Connexion en cours...')
+
+class KalClientInteractive(FloatLayout):
     def __init__(self, **kwargs):
         super(KalClientInteractive, self).__init__(**kwargs)
-        self.nickname = kwargs.get('nickname', 'jubei')
+        self.nickname = kwargs.get('nickname', 'noname')
         self.ip = kwargs.get('host', '127.0.0.1');
         self.port = kwargs.get('port', 6464)
 
@@ -211,20 +228,38 @@ class KalClientInteractive(Widget):
         self.register_event_type('on_load')
         self.register_event_type('on_reset')
 
+        self.panel_identity = KPanelIdentity(ctrl=self)
+        self.panel_connect = KPanelConnect(ctrl=self)
+        self.add_widget(self.panel_identity)
+
+        #Clock.schedule_interval(self.check_draw, 0)
+
+    def do_connect(self, host, port, nickname):
+        self.ip = host
+        self.port = port
+        self.nickname = nickname
         self.client = KalClient(self.ip, self.port, self)
         self.logged = False
         self.display_scenario = None
         self.history = []
-        self.history_label = Label(text='-', font_size=42, size=Window.size)
-
+        self.clear_widgets()
+        self.add_widget(self.panel_connect)
         Clock.schedule_interval(self.update_loop, 0)
-        Clock.schedule_interval(self.check_draw, 0)
         self.dispatch('on_notify', 'Connexion sur %s' % self.ip)
+
+    def do_cancel_connect(self):
+        if self.client:
+            self.client.close()
+        self.client = None
+        Clock.unschedule(self.update_loop)
+        self.reset()
+        self.clear_widgets()
+        self.add_widget(self.panel_identity)
 
     def reset(self):
         self.logged = False
-        for child in self.children[:]:
-            self.remove_widget(child)
+        self.clear_widgets()
+        self.add_widget(self.panel_connect)
         self.display_scenario = None
 
     def update_loop(self, *l):
@@ -249,7 +284,7 @@ class KalClientInteractive(Widget):
         if len(self.history) > 4:
             self.history = self.history[1:]
         Logger.info('Kal: %s' % args)
-        self.history_label.text = self.history[-1]
+        self.panel_connect.text = self.history[-1]
 
     def on_load(self, args):
         pass
@@ -271,41 +306,7 @@ class KalClientInteractive(Widget):
                 self.add_widget(self.history_label)
                 return
 
-    #
-    # Obsolete part
-    #
-    '''
-
-    def on_draw(self):
-        super(KalClientInteractive, self).on_draw()
-        self.draw_after()
-
-    def draw(self):
-        # if we have a scenario, draw it
-        if self.client.channel:
-            if self.client.channel.scenario is not None:
-                self.client.channel.scenario.draw()
-                return
-
-        # draw our background so
-        if len(self.history):
-            label = self.history[-1]
-            drawLabel(label=label, pos=self.center,
-                      font_size=42, color=(1, 1, 1, 1))
-
-    def draw_after(self):
-        # if we have a scenario, draw it
-        channel = self.client.channel
-        if not channel:
-            return
-        if channel.scenario is None:
-            return
-        if not hasattr(channel.scenario, 'draw_after'):
-            return
-        channel.scenario.draw_after()
-    '''
-
-class KalClientInteractiveApp(App):
+class KalClientApp(App):
     def build(self):
         size = Window.size
         return KalClientInteractive(size=size, **self.options)

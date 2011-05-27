@@ -16,6 +16,7 @@ resource_add_path(dirname(__file__))
 
 Builder.load_string('''
 <PlaceButton>:
+    size_hint: None, None
     font_size: 24
     halign: 'center'
     canvas.before:
@@ -40,15 +41,6 @@ class PlaceButton(Button):
     idx = NumericProperty(0)
 
 class ChooseClient(KalScenarioClient):
-    def draw(self):
-        set_color(1)
-        w, h = Window.size
-        t = list(background.texture.tex_coords)
-        t[2] = t[4] = w / float(background.width)
-        t[5] = t[7] = h / float(background.height)
-        drawTexturedRectangle(background.texture, size=Window.size,
-                             tex_coords=t)
-
     def handle_place(self, args):
         '''Select a placement on the table
         '''
@@ -65,6 +57,7 @@ class ChooseClient(KalScenarioClient):
                     font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
+                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
         for idx, px, py in ((1, cx-s-m, cy-s-m), (2, cx+m, cy-s-m),
@@ -95,6 +88,7 @@ class ChooseClient(KalScenarioClient):
                     font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
+                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
 
@@ -124,6 +118,7 @@ class ChooseClient(KalScenarioClient):
                     font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
+                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
         button = PlaceButton(text=u'Je suis pr\xeat',
@@ -142,6 +137,7 @@ class ChooseClient(KalScenarioClient):
                     font_size=24, anchor_x='center',
                     anchor_y='middle',
                     pos=(0, cy + 200),
+                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
         self.container.add_widget(
@@ -149,6 +145,7 @@ class ChooseClient(KalScenarioClient):
                   font_size=24, anchor_x='center',
                   anchor_y='middle',
                   pos=(0, cy - 50),
+                  size_hint=(None, None),
                   size=(Window.width, 100)
         ))
 

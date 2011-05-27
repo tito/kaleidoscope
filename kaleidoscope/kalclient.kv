@@ -1,0 +1,64 @@
+<KPanelIdentity>:
+    AnchorLayout:
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        size_hint: None, None
+        size: (400, 250)
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            BoxLayout:
+                Label:
+                    text: 'Host'
+                    font_size: 16
+                TextInput:
+                    multiline: False
+                    font_size: 16
+                    id: t_host
+                    text: str(root.host)
+                    on_text: root.host = args[1]
+
+            BoxLayout:
+                Label:
+                    text: 'Port'
+                    font_size: 16
+                TextInput:
+                    multiline: False
+                    font_size: 16
+                    id: t_port
+                    text: str(root.port)
+                    on_text: root.port = int(args[1]) if args[1] != '' else root.port
+            BoxLayout:
+                Label:
+                    text: 'Nickname'
+                    font_size: 16
+                TextInput:
+                    multiline: False
+                    font_size: 16
+                    id: t_nickname
+                    text: root.nickname
+                    on_text: root.nickname = args[1]
+            Button:
+                text: 'Connect'
+                font_size: 16
+                size_hint_y: None
+                height: 75
+                on_release: root.ctrl.do_connect(root.host, int(root.port), root.nickname)
+
+<KPanelConnect>:
+    AnchorLayout:
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        size_hint: None, None
+        size: (400, 250)
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 50
+            Label:
+                text: root.text
+                font_size: 16
+            Button:
+                text: 'Cancel'
+                font_size: 16
+                size_hint_y: None
+                height: 75
+                on_release: root.ctrl.do_cancel_connect()

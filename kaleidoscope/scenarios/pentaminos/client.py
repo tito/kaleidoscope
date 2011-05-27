@@ -128,6 +128,7 @@ class PentaminoAssembled(Scatter):
             out.append(s[iy * pw:(iy+1) * pw])
         print self.pw, self.ph, self.string, '=>', ''.join(out)
         self.string = ''.join(out)
+        self.build_canvas()
 
     def collide_point(self, x, y):
         '''Collide only where the pentaminos is filled, not in blank.
@@ -309,6 +310,19 @@ class PentaminosContainer(Widget):
         self.gridx = 0
         self.reset()
         Clock.schedule_interval(self.update_graphics_timer, 1 / 10.)
+        Clock.schedule_interval(self.check_grid_done, 1)
+
+    def check_grid_done(self, *largs):
+        # check the grid ?
+        if self.client.gametype == 'game2' and not self.griddone:
+            done = True
+            for x in self.grid:
+                if None in x:
+                    done = False
+            if done:
+                self.griddone = True
+                self.client.send('RECTDONE')
+
 
     def reset(self):
         self.clear_widgets()
@@ -729,16 +743,6 @@ class PentaminosClient(KalScenarioClient):
 
     '''
     def draw(self):
-        # check the grid ?
-        if self.gametype == 'game2' and not self.pcontainer.griddone:
-            done = True
-            for x in self.pcontainer.grid:
-                if None in x:
-                    done = False
-            if done:
-                self.pcontainer.griddone = True
-                self.send('RECTDONE')
-
         set_color(1)
         w, h = Window.size
         t = list(background.texture.tex_coords)
