@@ -10,7 +10,6 @@ from kivy.resources import resource_add_path
 from functools import partial
 
 #background = Image(join(dirname(__file__), 'background.png'))
-#myriad_fontname = join(dirname(__file__), 'myriad.ttf')
 
 resource_add_path(dirname(__file__))
 
@@ -34,11 +33,21 @@ Builder.load_string('''
             texture: self.texture
             size: self.texture_size
             pos: int(self.center_x - self.texture_size[0] / 2.), int(self.center_y - self.texture_size[1] / 2.)
+
+<ChooseLabel>:
+    font_size: 24
+    anchor_x: 'center'
+    anchor_y: 'middle'
+    size_hint: None, None
+    font_name: 'fonts/myriad.ttf'
 ''')
 
 class PlaceButton(Button):
     valid = BooleanProperty(True)
     idx = NumericProperty(0)
+
+class ChooseLabel(Label):
+    pass
 
 class ChooseClient(KalScenarioClient):
     def handle_place(self, args):
@@ -53,11 +62,8 @@ class ChooseClient(KalScenarioClient):
         m = 10
         self.container.clear_widgets()
         self.container.add_widget(
-            Label(text='Choisis une couleur',
-                    font_size=24, anchor_x='center',
-                    anchor_y='middle',
+            ChooseLabel(text='Choisis une couleur',
                     pos=(0, cy + 200),
-                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
         for idx, px, py in ((1, cx-s-m, cy-s-m), (2, cx+m, cy-s-m),
@@ -84,11 +90,8 @@ class ChooseClient(KalScenarioClient):
         m = 10
         self.container.clear_widgets()
         self.container.add_widget(
-            Label(text='Choisis un scenario',
-                    font_size=24, anchor_x='center',
-                    anchor_y='middle',
+            ChooseLabel(text='Choisis un scenario',
                     pos=(0, cy + 200),
-                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
 
@@ -114,11 +117,8 @@ class ChooseClient(KalScenarioClient):
         cx, cy = Window.center
         self.container.clear_widgets()
         self.container.add_widget(
-            Label(text=u'Cliques lorsque tous les joueurs ont une place',
-                    font_size=24, anchor_x='center',
-                    anchor_y='middle',
+            ChooseLabel(text=u'Cliques lorsque tous les joueurs ont une place',
                     pos=(0, cy + 200),
-                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
         button = PlaceButton(text=u'Je suis pr\xeat',
@@ -133,19 +133,13 @@ class ChooseClient(KalScenarioClient):
         cx, cy = Window.center
         self.container.clear_widgets()
         self.container.add_widget(
-            Label(text='Attends les autres joueurs',
-                    font_size=24, anchor_x='center',
-                    anchor_y='middle',
+            ChooseLabel(text='Attends les autres joueurs',
                     pos=(0, cy + 200),
-                    size_hint=(None, None),
                     size=(Window.width, 100)
         ))
         self.container.add_widget(
-            Label(text=args,
-                  font_size=24, anchor_x='center',
-                  anchor_y='middle',
+            ChooseLabel(text=args,
                   pos=(0, cy - 50),
-                  size_hint=(None, None),
                   size=(Window.width, 100)
         ))
 

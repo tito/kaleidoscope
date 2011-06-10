@@ -2,11 +2,12 @@ from os.path import dirname, join
 from kaleidoscope.scenario import KalScenarioServer
 from time import time
 from penta_color import penta_schemes
-from math import cos
 from penta_common import PentaListContainer
 
 from kivy.core.image import Image
 from kivy.utils import get_color_from_hex
+from kivy.core.window import Window
+from kivy.graphics import Color, BorderImage, Rectangle
 
 TIMER = 60 * 2
 PENTAMINOS_SIZE = 5, 3
@@ -15,6 +16,7 @@ PENTAMINOS_COUNT_BY_USERS = 3
 
 background = Image(join(dirname(__file__), 'background.png'))
 background.texture.wrap = 'repeat'
+btnbg = Image(join(dirname(__file__), 'buttonbackground.png')).texture
 
 class Pentaminos(KalScenarioServer):
     resources = (
@@ -24,7 +26,6 @@ class Pentaminos(KalScenarioServer):
         'penta-square-shadow.png',
         'background.png',
         'client.py',
-        'myriad.ttf',
         'penta_color.py',
         'pentaminos.kv',
         'penta_common.py'
@@ -55,34 +56,29 @@ class Pentaminos(KalScenarioServer):
     def init_ui(self):
         self.pentalist = PentaListContainer(server=True)
         self.controler.app.show(self.pentalist)
+        self.build_canvas()
 
-    def draw(self):
-        set_color(1)
-        w, h = getWindow().size
-        t = list(background.texture.tex_coords)
-        t[2] = t[4] = w / float(background.width)
-        t[5] = t[7] = h / float(background.height)
-        drawTexturedRectangle(background.texture, size=getWindow().size,
-                             tex_coords=t)
-
+    def build_canvas(self):
+        canvas = self.pentalist.canvas
         places = [player['place'] for player in self.players.itervalues()]
-        delta = abs(cos(getClock().get_time() * 3)) * 0.4
-
-        cx, cy = getWindow().center
-        m = 50
-        m2 = m * 2
-        if 1 in places:
-            set_color(*self.c1)
-            drawRoundedRectangle(pos=(m, m), size=(cx - m2, cy - m2), radius=15)
-        if 2 in places:
-            set_color(*self.c2)
-            drawRoundedRectangle(pos=(cx + m, m), size=(cx - m2, cy - m2), radius=15)
-        if 3 in places:
-            set_color(*self.c3)
-            drawRoundedRectangle(pos=(m, cy + m), size=(cx - m2, cy - m2), radius=15)
-        if 4 in places:
-            set_color(*self.c4)
-            drawRoundedRectangle(pos=(cx + m, cy + m), size=(cx - m2, cy - m2), radius=15)
+        canvas.before.clear()
+        with canvas.before:
+            Color(1, 1, 1)
+            cx, cy = Window.center
+            m = 50
+            m2 = m * 2
+            if 1 in places:
+                Color(*self.c1)
+                BorderImage(texture=btnbg, pos=(m, m), size=(cx - m2, cy - m2), radius=15)
+            if 2 in places:
+                Color(*self.c2)
+                BorderImage(texture=btnbg, pos=(cx + m, m), size=(cx - m2, cy - m2), radius=15)
+            if 3 in places:
+                Color(*self.c3)
+                BorderImage(texture=btnbg, pos=(m, cy + m), size=(cx - m2, cy - m2), radius=15)
+            if 4 in places:
+                Color(*self.c4)
+                BorderImage(texture=btnbg, pos=(cx + m, cy + m), size=(cx - m2, cy - m2), radius=15)
 
 
     def client_login(self, client):
@@ -109,7 +105,9 @@ class Pentaminos(KalScenarioServer):
             return
         key, w, h, penta = args
         w, h = map(int, (w, h))
-        if self.pentalist.add_penta(key, penta, w, h) is False:
+        place = self.players[client]['place']
+        color = getattr(self, 'c%d' % place)
+        if self.pentalist.add_penta(key, penta, w, h, color=color) is False:
             self.send_to(client, 'CANCEL %s' % key)
             self.send_to(client, 'GIVE 5')
             self.send_to(client, 'MSG Le pentaminos existe, trouve en un autre !')

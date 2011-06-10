@@ -6,12 +6,16 @@ import errno
 import hashlib
 import base64
 import traceback
+from os.path import dirname
 
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.floatlayout import FloatLayout
 from kivy.logger import Logger
 from kivy.clock import Clock
+from kivy.resources import resource_add_path
+
+resource_add_path(dirname(__file__))
 
 class KalCache(object):
     directory = os.path.join(os.path.dirname(__file__), 'cache')
@@ -207,15 +211,38 @@ class KalClient(asyncore.dispatcher):
 from kivy.properties import StringProperty, NumericProperty, ObjectProperty
 class KPanelIdentity(FloatLayout):
     ctrl = ObjectProperty(None)
-    host = StringProperty('127.0.0.1')
-    port = NumericProperty(6464)
-    nickname = StringProperty('noname')
+    time = NumericProperty(0)
+
+    def on_parent(self, instance, parent):
+        if parent is None:
+            Clock.unschedule(self.increase_time)
+        else:
+            Clock.schedule_interval(self.increase_time, 1 / 30.)
+            self.time = Clock.get_boottime()
+
+    def increase_time(self, dt):
+        self.time = Clock.get_boottime()
 
 class KPanelConnect(FloatLayout):
     ctrl = ObjectProperty(None)
     text = StringProperty('Connexion en cours...')
+    time = NumericProperty(0)
+
+    def on_parent(self, instance, parent):
+        if parent is None:
+            Clock.unschedule(self.increase_time)
+        else:
+            Clock.schedule_interval(self.increase_time, 1 / 30.)
+            self.time = Clock.get_boottime()
+
+    def increase_time(self, dt):
+        self.time = Clock.get_boottime()
 
 class KalClientInteractive(FloatLayout):
+    host = StringProperty('127.0.0.1')
+    port = NumericProperty(6464)
+    nickname = StringProperty('noname')
+    app = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(KalClientInteractive, self).__init__(**kwargs)
         self.nickname = kwargs.get('nickname', 'noname')
@@ -234,10 +261,7 @@ class KalClientInteractive(FloatLayout):
 
         #Clock.schedule_interval(self.check_draw, 0)
 
-    def do_connect(self, host, port, nickname):
-        self.ip = host
-        self.port = port
-        self.nickname = nickname
+    def do_connect(self):
         self.client = KalClient(self.ip, self.port, self)
         self.logged = False
         self.display_scenario = None
@@ -309,4 +333,42 @@ class KalClientInteractive(FloatLayout):
 class KalClientApp(App):
     def build(self):
         size = Window.size
-        return KalClientInteractive(size=size, **self.options)
+        return KalClientInteractive(size=size, app=self, **self.options)
+
+    def on_start(self):
+        if self.config.getint('config', 'first_run'):
+            self.config.set('config', 'first_run', '0')
+            self.config.write()
+            self.open_settings()
+
+    def build_config(self, config):
+        config.add_section('network')
+        config.set('network', 'host', 'localhost')
+        config.set('network', 'port', '6464')
+        config.set('network', 'nickname', 'noname')
+        config.add_section('config')
+        config.set('config', 'first_run', '1')
+
+    def build_settings(self, settings):
+        jsondata = '''[
+        { "type": "string", "title": "Hostname",
+          "desc": "Server hostname or ip",
+          "section": "network", "key": "host" },
+        { "type": "numeric", "title": "Port",
+          "desc": "Server port (default is 6464)",
+          "section": "network", "key": "port" },
+        { "type": "string", "title": "Nickname",
+          "desc": "Name to use for identify on the server",
+          "section": "network", "key": "nickname" } ]'''
+        settings.add_json_panel('Kaleidoscope', self.config, data=jsondata)
+
+    def on_config_change(self, config, section, key, value):
+        if config != self.config or section != 'network':
+            return
+        client = self.root
+        if key == 'host':
+            client.ip = value
+        elif key == 'nickname':
+            client.nickname = value
+        elif key == 'post':
+            client.port = int(value)

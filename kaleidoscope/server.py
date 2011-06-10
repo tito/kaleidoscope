@@ -17,7 +17,10 @@ from kivy.clock import Clock
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import NumericProperty
+from kivy.resources import resource_add_path
+from os.path import dirname
 
+resource_add_path(dirname(__file__))
 
 class KalControler(object):
     '''Network controler.
@@ -319,7 +322,7 @@ class KalServerScreenWait(FloatLayout):
 
     def __init__(self, **kwargs):
         super(KalServerScreenWait, self).__init__(**kwargs)
-        Clock.schedule_interval(self.increase_time, 1 / 5.)
+        Clock.schedule_interval(self.increase_time, 1 / 30.)
 
     def increase_time(self, dt):
         self.time += dt

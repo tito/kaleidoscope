@@ -34,7 +34,6 @@ penta_background.texture.wrap = 'repeat'
 penta_background_bottom = Image(join(dirname(__file__), 'penta-background-bottom.png'))
 background = Image(join(dirname(__file__), 'background.png'))
 background.texture.wrap = 'repeat'
-myriad_fontname = join(dirname(__file__), 'myriad.ttf')
 
 SQUARE = 100
 SQUARE_MM = 75
@@ -740,43 +739,5 @@ class PentaminosClient(KalScenarioClient):
                                                    t='out_elastic', d=1)).start(p)
             x += SQUARE + SQUARE_MM
             pc.add_widget(p)
-
-    '''
-    def draw(self):
-        set_color(1)
-        w, h = Window.size
-        t = list(background.texture.tex_coords)
-        t[2] = t[4] = w / float(background.width)
-        t[5] = t[7] = h / float(background.height)
-        drawTexturedRectangle(background.texture, size=Window.size,
-                             tex_coords=t)
-
-    def draw_after(self):
-        msg = self.last_msg
-        if not msg:
-            return
-        if self.gametype == 'game1':
-            y = self.pcontainer.height - self.pcontainer.backy + 30
-        else:
-            y = 20
-
-        w, h = Window.size
-        set_color(1)
-        drawLabel(label=msg, pos=(w / 2., y), center=False,
-                  anchor_x='center',
-                  font_name=myriad_fontname,
-                  color=self.current_text_color,
-                  font_size=24)
-
-        # draw little timer
-        pos = 50, 50
-        r = 25
-        set_color(1)
-        drawCircle(pos=pos, radius=r)
-        set_color(.4588, .7098, .2784)
-        d = max(0, 1 - ((self.timeout - time()) / self.timeoutl))
-        drawSemiCircle(pos, 0, r, sweep_angle=360 * d)
-
-    '''
 
 scenario_class = PentaminosClient

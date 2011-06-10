@@ -86,11 +86,12 @@ class PentaListContainer(BoxLayout):
                                           server=kwargs['server']))
         self.idx = 0
 
-    def add_penta(self, k, penta, w, h):
+    def add_penta(self, k, penta, w, h, color=None):
         # check that penta don't exist yet in our children
         for child in self.children:
             if child.pentak == k:
                 return False
+        self.children[self.idx].color = color
         self.children[self.idx].pentak = k
         self.children[self.idx].string = penta
         self.children[self.idx].pw = w

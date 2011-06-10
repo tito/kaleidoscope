@@ -4,13 +4,40 @@
 <KalServerScreenWait>:
     canvas:
         Color:
-            hsv: (self.time % 10.) / 25., 1, 1
+            hsv: (self.time % 25.) / 25., 1, 1
+        PushMatrix
+        Translate:
+            xy: root.x + 128, root.top - 128
+        Scale:
+            scale: 0.8 + abs(((1 + self.time * 0.1) % 2) - 1) * 0.8
+        Rotate:
+            axis: 0, 0, 1
+            angle: (-root.time * 10) % 360
         Rectangle:
-            size: 10, 10
-            pos: (self.time * 200) % 500 + (self.width - 500) / 2., self.height / 2. - 100
+            source: 'hexagone.png'
+            size: 512, 512
+            pos: -256, -256
+        PopMatrix
+        Color:
+            hsv: ((self.time + 10) % 25.) / 25., 1, 1
+        PushMatrix
+        Translate:
+            xy: root.right - 128, root.y + 128
+        Scale:
+            scale: 0.8 + abs(((self.time * 0.1) % 2) - 1) * 0.8
+        Rotate:
+            axis: 0, 0, 1
+            angle: (root.time * 10) % 360
+        Rectangle:
+            source: 'hexagone.png'
+            size: 512, 512
+            pos: -256, -256
+        PopMatrix
 
     Label:
         text: 'Bonjour ! En attente d\'un client ...'
+        font_name: 'fonts/myriad.ttf'
         text_size: self.size
         halign: 'center'
+        valign: 'middle'
         font_size: 36

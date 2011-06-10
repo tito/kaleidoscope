@@ -7,12 +7,10 @@ from math import cos
 
 MIN_PLAYERS = 1
 
-background = Image(join(dirname(__file__), 'background.png'))
-background.texture.wrap = 'repeat'
 btnbg = Image(join(dirname(__file__), 'buttonbackground.png')).texture
 
 from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import Color, Rectangle, BorderImage
+from kivy.graphics import Color, BorderImage
 from kivy.core.window import Window
 
 class ChooseView(FloatLayout):
@@ -23,16 +21,11 @@ class ChooseView(FloatLayout):
         c3 = get_color_from_hex('#81cac8aa')
         c4 = get_color_from_hex('#7f398baa')
 
-        t = list(background.texture.tex_coords)
-        t[2] = t[4] = Window.width / float(background.width)
-        t[5] = t[7] = Window.height / float(background.height)
         cx, cy = Window.center
         m = 50
         m2 = m * 2
         size = Window.size
         with self.canvas:
-            Color(1, 1, 1)
-            Rectangle(texture=background.texture, size=size, tex_coords=t)
             self.c1 = Color(*c1)
             BorderImage(texture=btnbg, pos=(m, m), size=(cx - m2, cy - m2))
             self.c2 = Color(*c2)
@@ -45,7 +38,6 @@ class ChooseView(FloatLayout):
 class Choose(KalScenarioServer):
     resources = (
         'background.png',
-        'myriad.ttf',
         'client.py',
         'buttonbackground.png'
     )

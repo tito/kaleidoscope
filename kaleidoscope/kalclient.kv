@@ -1,64 +1,100 @@
 <KPanelIdentity>:
+    canvas:
+        Color:
+            hsv: (self.time % 25.) / 25., 1, 1
+        PushMatrix
+        Translate:
+            xy: root.x + 128, root.top - 128
+        Scale:
+            scale: 0.8 + abs(((1 + self.time * 0.1) % 2) - 1) * 0.8
+        Rotate:
+            axis: 0, 0, 1
+            angle: (-root.time * 10) % 360
+        Rectangle:
+            source: 'hexagone.png'
+            size: 512, 512
+            pos: -256, -256
+        PopMatrix
+        Color:
+            hsv: ((self.time + 10) % 25.) / 25., 1, 1
+        PushMatrix
+        Translate:
+            xy: root.right - 128, root.y + 128
+        Scale:
+            scale: 0.8 + abs(((self.time * 0.1) % 2) - 1) * 0.8
+        Rotate:
+            axis: 0, 0, 1
+            angle: (root.time * 10) % 360
+        Rectangle:
+            source: 'hexagone.png'
+            size: 512, 512
+            pos: -256, -256
+        PopMatrix
     AnchorLayout:
         pos_hint: {'center_x': .5, 'center_y': .5}
         size_hint: None, None
-        size: (400, 250)
+        size: (400, 150)
         BoxLayout:
             orientation: 'vertical'
-            spacing: 20
-            BoxLayout:
-                Label:
-                    text: 'Host'
-                    font_size: 16
-                TextInput:
-                    multiline: False
-                    font_size: 16
-                    id: t_host
-                    text: str(root.host)
-                    on_text: root.host = args[1]
-
-            BoxLayout:
-                Label:
-                    text: 'Port'
-                    font_size: 16
-                TextInput:
-                    multiline: False
-                    font_size: 16
-                    id: t_port
-                    text: str(root.port)
-                    on_text: root.port = int(args[1]) if args[1] != '' else root.port
-            BoxLayout:
-                Label:
-                    text: 'Nickname'
-                    font_size: 16
-                TextInput:
-                    multiline: False
-                    font_size: 16
-                    id: t_nickname
-                    text: root.nickname
-                    on_text: root.nickname = args[1]
-            Button:
-                text: 'Connect'
+            Label:
+                size_hint_y: 2
                 font_size: 16
-                size_hint_y: None
-                height: 75
-                on_release: root.ctrl.do_connect(root.host, int(root.port), root.nickname)
+                text: 'Host: %s\nNickname: %s' % (root.ctrl.ip, root.ctrl.nickname)
+                halign: 'center'
+            BoxLayout:
+                padding: 5
+                spacing: 5
+                Button:
+                    text: 'Connect'
+                    on_release: root.ctrl.do_connect()
+                Button:
+                    text: 'Configure'
+                    on_release: root.ctrl.app.open_settings()
 
 <KPanelConnect>:
+    canvas:
+        Color:
+            hsv: (self.time % 25.) / 25., 1, 1
+        PushMatrix
+        Translate:
+            xy: root.x + 128, root.top - 128
+        Scale:
+            scale: 0.8 + abs(((1 + self.time * 0.1) % 2) - 1) * 0.8
+        Rotate:
+            axis: 0, 0, 1
+            angle: (-root.time * 10) % 360
+        Rectangle:
+            source: 'hexagone.png'
+            size: 512, 512
+            pos: -256, -256
+        PopMatrix
+        Color:
+            hsv: ((self.time + 10) % 25.) / 25., 1, 1
+        PushMatrix
+        Translate:
+            xy: root.right - 128, root.y + 128
+        Scale:
+            scale: 0.8 + abs(((self.time * 0.1) % 2) - 1) * 0.8
+        Rotate:
+            axis: 0, 0, 1
+            angle: (root.time * 10) % 360
+        Rectangle:
+            source: 'hexagone.png'
+            size: 512, 512
+            pos: -256, -256
+        PopMatrix
     AnchorLayout:
         pos_hint: {'center_x': .5, 'center_y': .5}
         size_hint: None, None
-        size: (400, 250)
+        size: (400, 150)
 
         BoxLayout:
             orientation: 'vertical'
-            spacing: 50
+            padding: 5
             Label:
+                size_hint_y: 2
                 text: root.text
                 font_size: 16
             Button:
                 text: 'Cancel'
-                font_size: 16
-                size_hint_y: None
-                height: 75
                 on_release: root.ctrl.do_cancel_connect()
