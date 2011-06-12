@@ -245,9 +245,9 @@ class KalClientInteractive(FloatLayout):
     app = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(KalClientInteractive, self).__init__(**kwargs)
-        self.nickname = kwargs.get('nickname', 'noname')
-        self.ip = kwargs.get('host', '127.0.0.1');
-        self.port = kwargs.get('port', 6464)
+        self.nickname = self.app.config.get('network', 'nickname')
+        self.host = self.app.config.get('network', 'host')
+        self.port = self.app.config.getint('network', 'port')
 
         self.register_event_type('on_ok')
         self.register_event_type('on_failed')
@@ -262,14 +262,14 @@ class KalClientInteractive(FloatLayout):
         #Clock.schedule_interval(self.check_draw, 0)
 
     def do_connect(self):
-        self.client = KalClient(self.ip, self.port, self)
+        self.client = KalClient(self.host, self.port, self)
         self.logged = False
         self.display_scenario = None
         self.history = []
         self.clear_widgets()
         self.add_widget(self.panel_connect)
         Clock.schedule_interval(self.update_loop, 0)
-        self.dispatch('on_notify', 'Connexion sur %s' % self.ip)
+        self.dispatch('on_notify', 'Connexion sur %s' % self.host)
 
     def do_cancel_connect(self):
         if self.client:
@@ -333,7 +333,7 @@ class KalClientInteractive(FloatLayout):
 class KalClientApp(App):
     def build(self):
         size = Window.size
-        return KalClientInteractive(size=size, app=self, **self.options)
+        return KalClientInteractive(size=size, app=self)
 
     def on_start(self):
         if self.config.getint('config', 'first_run'):
@@ -367,7 +367,7 @@ class KalClientApp(App):
             return
         client = self.root
         if key == 'host':
-            client.ip = value
+            client.host = value
         elif key == 'nickname':
             client.nickname = value
         elif key == 'post':

@@ -11,7 +11,7 @@ from kivy.clock import Clock
 
 class PentaContainer(Widget):
 
-    string = StringProperty(None)
+    string = StringProperty(None, allownone=True)
 
     pw = NumericProperty(0)
 

@@ -617,7 +617,7 @@ class PentaminosContainer(Widget):
                 angle_end=360 * d, segments=40)
 
             # grid
-            Color(1, 1, 1, .5)
+            Color(1, 1, 1, .3)
             gw, gh = self.client.gridsize
             step = self.step
             mx = self.mx
