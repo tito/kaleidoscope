@@ -102,6 +102,8 @@ class Choose(KalScenarioServer):
                      z['place'] != -1])
         total = len([x for x, z in self.players.iteritems() if z['place'] != -1])
 
+        print 'send_wait', ready, total
+
         if total < MIN_PLAYERS:
             msg = 'Il manque un joueur pour commencer'
             self.reset()
@@ -140,6 +142,9 @@ class Choose(KalScenarioServer):
         # a client ask for a specific scenario
         self.selected_scenario = args[0]
         self.send_to(client, 'BEREADY')
+        for client, player in self.players.iteritems():
+            if player['place'] != -1:
+                self.send_to(client, 'BEREADY')
 
     def do_client_ready(self, client, args):
         self.players[client]['ready'] = True
@@ -158,16 +163,19 @@ class Choose(KalScenarioServer):
         if len(self.players) < 1:
             return
         ready = 0
+        total = len([x for x, z in self.players.iteritems() if z['place'] != -1])
         for client, infos in self.players.iteritems():
             if infos['place'] == -1:
                 continue
             if infos['ready']:
                 ready += 1
-        if ready < MIN_PLAYERS:
+        if ready < MIN_PLAYERS or ready != total:
             return
+        print 'SWITCH TO LAUNCH ???'
         self.state = 'launch'
 
     def run_launch(self):
+        print '======== RUN LAUNCH'
         for client in self.players.keys()[:]:
             infos = self.players[client]
             if infos['place'] == -1:

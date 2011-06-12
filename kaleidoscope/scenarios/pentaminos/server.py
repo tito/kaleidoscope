@@ -86,6 +86,10 @@ class Pentaminos(KalScenarioServer):
 
     def client_logout(self, client):
         del self.players[client]
+        if hasattr(self, 'root_game2'):
+            self.build_canvas(self.root_game2)
+        else:
+            self.build_canvas(self.pentalist.canvas)
 
     def start(self):
         '''Scenario start, wait for all player to be ready
@@ -177,7 +181,7 @@ class Pentaminos(KalScenarioServer):
             self.state = 'reset_for_game2'
 
     def run_reset_for_game2(self):
-        w = Widget()
+        self.root_game2 = w = Widget()
         self.build_canvas(w.canvas)
         self.controler.app.show(w)
         self.send_all('CLEAR')

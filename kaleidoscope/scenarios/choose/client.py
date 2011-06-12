@@ -70,7 +70,7 @@ class ChooseClient(KalScenarioClient):
                             (3, cx-s-m, cy+m), (4, cx+m, cy+m)):
             valid = idx in available
             button = PlaceButton(text='', size=(200, 200),
-                              pos=(px, py), idx=idx)
+                              pos=(px, py), idx=idx, valid=valid)
             self.container.add_widget(button)
 
             if not valid:
@@ -123,7 +123,7 @@ class ChooseClient(KalScenarioClient):
         ))
         button = PlaceButton(text=u'Je suis pr\xeat',
                         size=(350, 100),
-                        pos=(cx - 350 / 2., cy - 50))
+                        pos=(cx - 350 / 2., cy - 100))
         button.bind(on_release=beready_press)
         self.container.add_widget(button)
 
