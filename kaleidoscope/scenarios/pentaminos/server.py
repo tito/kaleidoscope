@@ -4,6 +4,7 @@ from time import time
 from penta_color import penta_schemes
 from penta_common import PentaListContainer
 
+from kivy.uix.widget import Widget
 from kivy.core.image import Image
 from kivy.utils import get_color_from_hex
 from kivy.core.window import Window
@@ -56,10 +57,9 @@ class Pentaminos(KalScenarioServer):
     def init_ui(self):
         self.pentalist = PentaListContainer(server=True)
         self.controler.app.show(self.pentalist)
-        self.build_canvas()
+        self.build_canvas(self.pentalist.canvas)
 
-    def build_canvas(self):
-        canvas = self.pentalist.canvas
+    def build_canvas(self, canvas):
         places = [player['place'] for player in self.players.itervalues()]
         canvas.before.clear()
         with canvas.before:
@@ -177,7 +177,9 @@ class Pentaminos(KalScenarioServer):
             self.state = 'reset_for_game2'
 
     def run_reset_for_game2(self):
-        self.controler.app.show()
+        w = Widget()
+        self.build_canvas(w.canvas)
+        self.controler.app.show(w)
         self.send_all('CLEAR')
         self.msg_all('Remplis le rectangle avec les pentaminos')
         self.state = 'game2'

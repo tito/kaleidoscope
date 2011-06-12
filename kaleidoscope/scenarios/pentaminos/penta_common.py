@@ -37,7 +37,7 @@ class PentaContainer(Widget):
         if pw == 0 or ph == 0 or s is None:
             return
         with self.canvas:
-            Color(1, 1, 1, .5)
+            Color(1, 1, 1, .1)
             Rectangle(pos=self.pos, size=self.size)
 
             if self.color is None:
@@ -58,7 +58,6 @@ class PentaContainer(Widget):
                         continue
                     x = ix * (step + 1)
                     y = iy * (step + 1)
-                    print 'rectangle is', (ix, iy), (x, y), ox+x, oy+y
                     Rectangle(pos=(ox + x, oy + y), size=size)
 
 class PentaListContainer(BoxLayout):
