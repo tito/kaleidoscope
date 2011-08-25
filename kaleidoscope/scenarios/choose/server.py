@@ -24,7 +24,6 @@ class ChooseView(FloatLayout):
         cx, cy = Window.center
         m = 50
         m2 = m * 2
-        size = Window.size
         with self.canvas:
             self.c1 = Color(*c1)
             BorderImage(texture=btnbg, pos=(m, m), size=(cx - m2, cy - m2))
