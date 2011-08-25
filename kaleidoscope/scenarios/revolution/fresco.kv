@@ -1,0 +1,40 @@
+#:kivy 1.0.8
+
+<FrescoThumbnail>:
+	do_scale: False
+	do_rotation: False
+	size_hint: (None, None)
+	size: (128, 128)
+
+	Image:
+		source: root.item.get('thumbnail', '')
+
+<FrescoClientLayout>:
+	fresco: fresco
+
+	Fresco:
+		id: fresco
+		size_hint: (1, .6)
+		pos_hint: {'y': .4}
+
+<FrescoDescription>:
+	ScrollView:
+		pos: root.pos
+		size: root.size
+		do_scroll_x: False
+		GridLayout:
+			cols: 1
+			size_hint_y: None
+			orientation: 'vertical'
+			padding: 10
+			spacing: 10
+			Image:
+				source: root.item.get('media', '')
+				size_hint_y: None
+				height: 0 if self.source == '' else 250
+
+			Label:
+				text: root.item.get('content', '')
+				text_size: self.width, None
+				size_hint_y: None
+				height: self.texture_size[1]
