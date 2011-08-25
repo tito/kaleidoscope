@@ -64,7 +64,7 @@ class KalControler(object):
         '''Send a raw message
         '''
         try:
-            print '<', client.addr, message.replace('\n', '')
+            #print '<', client.addr, message.replace('\n', '')
             client.push(message)
         except:
             print '# Fatal error while sending %s to %s' % (message, client)
@@ -295,7 +295,7 @@ class KalServerChannel(asynchat.async_chat):
         self.data = ''
 
     def dispatch_command(self, cmd, args):
-        print '>', self.addr, cmd, args
+        #print '>', self.addr, cmd, args
         KalControler.instance().handle_from(self, cmd, args)
 
     def handle_close(self):
