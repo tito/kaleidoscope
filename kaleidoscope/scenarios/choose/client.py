@@ -98,6 +98,7 @@ class ChooseClient(KalScenarioClient):
         py = cy
         for scenario, name in (
             ('pentaminos', 'Pentaminos'),
+            ('revolution', 'Revolution'),
             #('anglais', 'Anglais')
         ):
             button = PlaceButton(text=name, size=(350, 100),

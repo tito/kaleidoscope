@@ -1,0 +1,78 @@
+{
+	"date_start": 1700,
+	"date_end": 1900,
+	"date_step": 50,
+	"items": [
+		{
+			"title": "Le segment du jeu de Paume",
+			"date": 1789.0620,
+			"date_str": "20 juin 1789",
+			"thumbnail": "th_sermentjeupaume.jpg",
+			"media": "sermentjeupaume.jpg",
+			"content": ""
+		},{
+			"title": "Déclaration des droits de l'Homme et du citoyen",
+			"date": 1789.0826,
+			"date_str": "26 août 1789",
+			"thumbnail": "th_ddhc.jpg",
+			"media": "ddhc.jpg",
+			"content": ""
+		},{
+			"title": "Prise de la Bastille",
+			"date": 1789.0714,
+			"date_str": "14 juillet 1789",
+			"thumbnail": "th_prisebastille.jpg",
+			"media": "prisebastille.jpg",
+			"content": ""
+		},{
+			"title": "Fuite de Louis XVI et arrestation à Varennes",
+			"date": 1791.0620,
+			"date_str": "6 juin 1791",
+			"thumbnail": "th_nuitvarennes.jpg",
+			"media": "nuitvarennes.jpg",
+			"content": "La fuite manquée des 20 et 21 juin 1791 est un épisode important de la Révolution française au cours de laquelle le roi de France Louis XVI, sa femme Marie-Antoinette, et leur famille immédiate ont tenté de rejoindre le bastion royaliste de Montmédy, à partir duquel le roi espérait lancer une contre-révolution. En accréditant la thèse de la trahison du roi, cet événement déterminant dans le cours de la Révolution française, a largement contribué à rendre crédible l’idée d’instaurer une république en France."
+		},{
+			"title": "La France es divisée en 83 départements",
+			"date": 1789.1222,
+			"date_str": "22 décembre 1789",
+			"thumbnail": "th_83departements.jpg",
+			"media": "83departements.jpg",
+			"content": ""
+		},{
+			"title": "Rouget de Lisle écrit La Marseillaise",
+			"date": 1792.0425,
+			"date_str": "25 avril 1792",
+			"thumbnail": "th_marseillaise.jpg",
+			"media": "marseillaise.mp3",
+			"content": ""
+		},{
+			"title": "Proclamation de la Première République",
+			"date": 1792.0921,
+			"date_str": "21 septembre 1792",
+			"thumbnail": "th_1republique.jpg",
+			"media": "calendrier-republicain.jpg",
+"content": "Instauration du calendrier révolutionnaire : Le calendrier républicain, ou calendrier révolutionnaire français, fut créé pendant la Révolution française, et fut utilisé de 1792 à1806, ainsi que brièvement durant la Commune de Paris (1871).\nLa Révolution ayant fait de la France un État laïc, ce calendrier avait pour but d'effacer de la mémoire des Français le calendrier grégorien, étroitement lié au christianisme, en s’appuyant sur le système décima."
+		},{
+			"title": "Éxécution de Louis XVI",
+			"date": 1793.0123,
+			"date_str": "21 janvier 1793",
+			"thumbnail": "th_exelouisxvi.jpg",
+			"media": "exelouisxvi.jpg",
+			"content": ""
+		},{
+			"title": "Exécution de Marie-Antoinette d’Autriche",
+			"date": 1793.1016,
+			"date_str": "16 septembre 1793",
+			"thumbnail": "th_exemarieantoinette.jpg",
+			"media": "exemarieantoinette.jpg",
+			"content": ""
+		},{
+			"title": "Napoléon 1er devient Empereur des Français",
+			"date": 1804.0518,
+			"date_str": "18 mai 1804",
+			"thumbnail": "th_sacrenapoleon1.jpg",
+			"media": "sacrenapoleon1.jpg",
+"content": "Le sacre impérial, événement unique dans l’Histoire de France, représenté sur le tableau de Jacques-Louis David, Le Sacre de Napoléon, est lourdement chargé en symboles. Le passage de la République à l’Empire nécessite la création d’armoiries impériales, ainsi que la création d’objets symboliques destinés à établir une tradition auparavant inexistante. Napoléon, qui se veut rassembleur, décide d’associer aux symboles de son règne les images qui ont pu représenter auparavant la France, ainsi que les pouvoirs forts européens.\nL’aigle est choisi en référence aux aigles romaines, portées par les légions, mais il est également le symbole de Charlemagne, l’aigle éployée. C’est d’ailleurs une erreur de lecture qui donnera pour symbole de l’Empire français un aigle aux ailes déployées : en héraldique, éployée se dit des oiseaux et des animaux chimériques représentés avec les ailes étendues (un aigle à deux têtes aux ailes déployées en est un bon exemple). La couleur rouge du manteau impérial est une référence directe à la pourpre de l’imperium romain. Napoléon se pose ainsi en héritier de l’Empire romain et de Charlemagne.\nLes abeilles sont censées rappeler les Mérovingiens (des broches les représentant ayant été retrouvées dans des tombeaux de cette époque), et leur disposition sur les armoiries et le manteau impérial doit rappeler les fleurs de lys des Capétiens. La main de justice, utilisée par les Capétiens lors des sacres royaux, doit faire apparaître que l'Empereur est l’héritier de leur pouvoir. Napoléon veut montrer qu’il est le fondateur de la « quatrième dynastie », celle des Bonaparte, après lesMérovingiens, les Carolingiens, et les Capétiens. D’autres symboles utilisés pendant le sacre sont chargés de valeurs morales. Ainsi Napoléon tient-il un moment le globe de Charlemagne ; il porte la couronne de ce même empereur (ces deux éléments ayant été forgés de toutes pièces avant le sacre). Son épée et son sceptre sont dits « de Charlemagne » : ils ont été en réalité utilisés depuis plusieurs siècles par les Valois puis les Bourbons lors de leurs sacres."
+		}
+	]
+}

@@ -7,6 +7,7 @@ import hashlib
 import base64
 import traceback
 from os.path import dirname
+from os import makedirs
 
 from kivy.app import App
 from kivy.core.window import Window
@@ -32,7 +33,7 @@ class KalCache(object):
 
         filename = os.path.join(directory, '__init__.py')
         if not os.path.exists(filename):
-            with open(filename, 'w') as fd:
+            with open(filename, 'wb') as fd:
                 fd.write('')
 
     @staticmethod
@@ -58,6 +59,12 @@ class KalCache(object):
         filename = os.path.join(KalCache.directory, scenarioname, resource)
         KalCache.initscenario(scenarioname)
 
+        try:
+            d = dirname(filename)
+            if d:
+                makedirs(d)
+        except OSError:
+            pass
         with open(filename, 'wb') as fd:
             fd.write(data)
 
