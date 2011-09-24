@@ -13,6 +13,7 @@ from os import makedirs
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.label import Label
 from kivy.logger import Logger
 from kivy.clock import Clock
 from kivy.resources import resource_add_path
@@ -150,15 +151,16 @@ class KalClientChannel(asynchat.async_chat):
         self._write_file(scenarioname, filename, data)
 
     def handle_zprepare(self, args):
-        print 'receiving compressed data', args
         self._z_file = args.split()
+        self.ui.status(u'Synchronisation du fichier %s, %d restants' % (
+            self._z_file[1], self.require))
 
     def handle_zwrite(self, data):
         scenarioname, filename, size = self._z_file
-        print 'decoding', filename
+        self.ui.status(u'Ecriture du fichier %s, %d restants' % (
+            self._z_file[1], self.require))
         data = base64.urlsafe_b64decode(data)
         data = zlib.decompress(data)
-        print 'writing', filename
         self._write_file(scenarioname, filename, data)
         self._z_file = None
 
@@ -282,6 +284,7 @@ class KalClientInteractive(FloatLayout):
 
         self.panel_identity = KPanelIdentity(ctrl=self)
         self.panel_connect = KPanelConnect(ctrl=self)
+        self.label_status = None
         self.add_widget(self.panel_identity)
 
         #Clock.schedule_interval(self.check_draw, 0)
@@ -318,6 +321,18 @@ class KalClientInteractive(FloatLayout):
         if not self.logged:
             self.client.channel.login(self.nickname)
             self.logged = True
+
+    def status(self, msg):
+        if self.label_status is None:
+            self.label_status = Label(
+                    size_hint=(None, None), height=25, y=5,
+                    color=(.7, .7, .7, .7))
+        l = self.label_status
+        l.text = msg
+        l.texture_update()
+        l.width = l.texture_size[0] + 20
+        self.remove_widget(l)
+        self.add_widget(l)
 
     def on_ok(self, args):
         pass
@@ -376,14 +391,14 @@ class KalClientApp(App):
 
     def build_settings(self, settings):
         jsondata = '''[
-        { "type": "string", "title": "Hostname",
-          "desc": "Server hostname or ip",
+        { "type": "string", "title": "Serveur",
+          "desc": "Nom ou IP du serveur",
           "section": "network", "key": "host" },
         { "type": "numeric", "title": "Port",
-          "desc": "Server port (default is 6464)",
+          "desc": "Port du serveur (6464 par defaut)",
           "section": "network", "key": "port" },
-        { "type": "string", "title": "Nickname",
-          "desc": "Name to use for identify on the server",
+        { "type": "string", "title": "Nom",
+          "desc": "Nom d'identification pour le serveur",
           "section": "network", "key": "nickname" } ]'''
         settings.add_json_panel('Kaleidoscope', self.config, data=jsondata)
 

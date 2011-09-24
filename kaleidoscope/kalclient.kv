@@ -39,16 +39,16 @@
             Label:
                 size_hint_y: 2
                 font_size: 16
-                text: 'Host: %s\nNickname: %s' % (root.ctrl.host, root.ctrl.nickname)
+                text: 'Serveur: %s\nNom: %s' % (root.ctrl.host, root.ctrl.nickname)
                 halign: 'center'
             BoxLayout:
                 padding: 5
                 spacing: 5
                 Button:
-                    text: 'Connect'
+                    text: 'Se connecter'
                     on_release: root.ctrl.do_connect()
                 Button:
-                    text: 'Configure'
+                    text: 'Configuration'
                     on_release: root.ctrl.app.open_settings()
 
 <KPanelConnect>:
