@@ -12,10 +12,20 @@
 <FrescoClientLayout>:
 	fresco: fresco
 
-	Fresco:
-		id: fresco
+	canvas.before:
+		Color:
+			rgb: 1, 1, 1
+		Rectangle:
+			size: self.size
+			pos: self.pos
+			source: 'background.png'
+
+	BoxLayout:
 		size_hint: (1, .6)
 		pos_hint: {'y': .4}
+		padding: 50
+		Fresco:
+			id: fresco
 
 <FrescoDescription>:
 	ScrollView:
@@ -38,3 +48,4 @@
 				text_size: self.width, None
 				size_hint_y: None
 				height: self.texture_size[1]
+

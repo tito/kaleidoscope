@@ -1,12 +1,13 @@
 from kivy.clock import Clock
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scatter import Scatter
-from kivy.graphics import Color, Rectangle, Line
+from kivy.graphics import Color, Rectangle, Line, BorderImage
 from kivy.properties import StringProperty, ListProperty, \
         NumericProperty, ObjectProperty
 from kivy.resources import resource_add_path
 from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
+from kivy.core.image import Image
 from kivy.core.text import Label as CoreLabel
 from json import load
 
@@ -96,6 +97,13 @@ class Fresco(Widget):
         return x
 
     def build_canvas(self, dt):
+
+        # get 3 textures
+        curdir = dirname(__file__)
+        arrow_left = Image(join(curdir, 'arrow_left.png')).texture
+        arrow_middle = Image(join(curdir, 'arrow_middle.png')).texture
+        arrow_right = Image(join(curdir, 'arrow_right.png')).texture
+
         self.canvas.before.clear()
         with self.canvas.before:
             cmax = ((self.date_end - self.date_start) / float(self.date_step))
@@ -105,20 +113,46 @@ class Fresco(Widget):
             bh = 10
             cy = y + h / 2
             h = fh * 2
-            for cx in xrange(self.date_start, self.date_end, self.date_step):
+            r = range(self.date_start, self.date_end, self.date_step)
+            for index, cx in enumerate(r):
                 alpha = (cx - self.date_start) / (float(self.date_end) -
                         float(self.date_start))
                 
-                c = 0.2 + (0.6 * alpha)
-                Color(c, c, c)
-                Rectangle(pos=(x, cy - fh), size=(w/cmax, h))
-                Color(1, 1, 1)
-                Line(points=[x, cy - fh - bh, x, cy + fh + bh])
-                label = CoreLabel(text=str(cx), color=(0, 0, 0, 1))
+                # create background of arrow (part of)
+                c = 0.9 - (0.4 * alpha)
+                a = 1.0 - 0.4 * alpha
+                Color(c, c, c, a)
+
+                if index == 0:
+                    texture = arrow_left
+                    border = (2, 2, 2, 8)
+                elif index == len(r) - 1:
+                    texture = arrow_right
+                    border = (2, 126, 2, 2)
+                else:
+                    texture = arrow_middle
+                    border = (2, 0, 2, 0)
+                BorderImage(pos=(x, cy - fh), size=(w/cmax, h), texture=texture,
+                        border=border)
+
+                # create lines
+                x = int(x)
+                if index > 0:
+                    Color(1, 1, 1, .8)
+                    Line(points=[x, cy - fh - bh, x, cy + fh + bh])
+
+                # create label (333f43)
+                label = CoreLabel(text=str(cx),
+                        font_size=14, font_name='fonts/DroidSans.ttf')
                 label.refresh()
-                Color(0, 0, 0)
-                Rectangle(pos=(x + 20, cy + fh - 40), size=label.texture.size,
-                        texture=label.texture)
+                Color(0x33/255., 0x3f/255., 0x43/255.)
+
+                # trick to invert the label orientation
+                tc = label.texture.tex_coords
+                th, tw = label.texture.size
+                tc = tc[-2:] + tc[0:-2]
+                Rectangle(pos=(x + 5, cy - th / 2), size=(tw, th),
+                        texture=label.texture, tex_coords=tc)
                 x += w / cmax
 
 class FrescoClientLayout(FloatLayout):

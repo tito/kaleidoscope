@@ -24,9 +24,6 @@ from fresco_common import FrescoClientLayout
 resource_add_path(dirname(__file__))
 Builder.load_file(join(dirname(__file__), 'fresco.kv'))
 
-background = Image(join(dirname(__file__), 'background.png'))
-background.texture.wrap = 'repeat'
-
 class FrescoClient(KalScenarioClient):
     def __init__(self, *largs):
         super(FrescoClient, self).__init__(*largs)
