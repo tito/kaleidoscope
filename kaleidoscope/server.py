@@ -158,7 +158,8 @@ class KalControler(object):
             return
         data = self.scenario.get(filename)
         data = base64.urlsafe_b64encode(data)
-        self.send_to(client, 'WRITE %s %s %s\n' % (scenarioname, filename, data))
+        cmd = 'WRITE %s %s %s\n' % (scenarioname, filename, data)
+        self.send_to(client, cmd)
 
     #
     # Scenario handling state machine
@@ -343,7 +344,7 @@ class KalServerApp(App):
         return self.root
 
     def update_loop(self, *l):
-        asyncore.loop(timeout=0, count=1)
+        asyncore.loop(timeout=0, count=10)
         KalControler.instance().tick_state_machine()
 
     def show(self, widget=None):

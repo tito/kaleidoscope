@@ -170,12 +170,11 @@ class Choose(KalScenarioServer):
                 ready += 1
         if ready < MIN_PLAYERS or ready != total:
             return
-        print 'SWITCH TO LAUNCH ???'
         self.state = 'launch'
 
     def run_launch(self):
-        print '======== RUN LAUNCH'
         for client in self.players.keys()[:]:
+            self.send_to(client, 'WAIT Chargement du scenario en cours')
             infos = self.players[client]
             if infos['place'] == -1:
                 self.client_logout(client)

@@ -6,6 +6,7 @@ import errno
 import hashlib
 import base64
 import traceback
+import zlib
 from os.path import dirname
 from os import makedirs
 
@@ -137,13 +138,16 @@ class KalClientChannel(asynchat.async_chat):
             self.push('GET %s %s\n' % (scenarioname, filename))
             self.require += 1
 
-    def handle_write(self, args):
-        scenarioname, filename, data = args.split()
-        data = base64.urlsafe_b64decode(data)
+    def _write_file(self, scenarioname, filename, data):
         KalCache.write(scenarioname, filename, data)
         self.require -= 1
         if self.require == 0:
             self.handle_sync(scenarioname)
+
+    def handle_write(self, args):
+        scenarioname, filename, data = args.split()
+        data = base64.urlsafe_b64decode(data)
+        self._write_file(scenarioname, filename, data)
 
     def handle_sync(self, args):
         self.server.reconnect_count = 0
@@ -294,7 +298,7 @@ class KalClientInteractive(FloatLayout):
         self.display_scenario = None
 
     def update_loop(self, *l):
-        asyncore.loop(timeout=0, count=1)
+        asyncore.loop(timeout=0, count=10)
         if self.client.channel is None:
             return
         if not self.logged:
