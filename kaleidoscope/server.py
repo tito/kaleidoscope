@@ -10,6 +10,7 @@ import traceback
 import asyncore, asynchat
 import socket
 import base64
+import zlib
 
 from kaleidoscope import config
 
@@ -157,9 +158,17 @@ class KalControler(object):
             self.failed(client, 'Invalid scenario name for GET')
             return
         data = self.scenario.get(filename)
+        '''
+        # previous way, uncompressed
         data = base64.urlsafe_b64encode(data)
         cmd = 'WRITE %s %s %s\n' % (scenarioname, filename, data)
         self.send_to(client, cmd)
+        '''
+        datacc = zlib.compress(data)
+        datacc = base64.urlsafe_b64encode(datacc)
+        self.send_to(client, 'ZPREPARE %s %s %d\n' % (
+            scenarioname, filename, len(datacc)))
+        self.send_to(client, 'ZWRITE ' + datacc + '\n')
 
     #
     # Scenario handling state machine

@@ -149,6 +149,20 @@ class KalClientChannel(asynchat.async_chat):
         data = base64.urlsafe_b64decode(data)
         self._write_file(scenarioname, filename, data)
 
+    def handle_zprepare(self, args):
+        print 'receiving compressed data', args
+        self._z_file = args.split()
+
+    def handle_zwrite(self, data):
+        scenarioname, filename, size = self._z_file
+        print 'decoding', filename
+        data = base64.urlsafe_b64decode(data)
+        data = zlib.decompress(data)
+        print 'writing', filename
+        self._write_file(scenarioname, filename, data)
+        self._z_file = None
+
+
     def handle_sync(self, args):
         self.server.reconnect_count = 0
         if self.require != 0:
