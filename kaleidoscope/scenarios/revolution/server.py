@@ -4,9 +4,6 @@ from kaleidoscope.scenario import KalScenarioServer
 from time import time
 
 from kivy.core.image import Image
-from kivy.utils import get_color_from_hex
-from kivy.core.window import Window
-from kivy.graphics import Color, BorderImage
 from kivy.uix.floatlayout import FloatLayout
 from fresco_common import Fresco, FrescoThumbnail
 from random import randint
@@ -22,6 +19,12 @@ btnbg = Image(join(dirname(__file__), 'buttonbackground.png')).texture
 
 fresco_colors = ((227, 53, 119), (92, 145, 179), (92, 179, 103), (194, 222, 65))
 fresco_logos = ('ying', 'plane', 'umbrella', 'horse')
+
+class FrescoServerLayout(FloatLayout):
+    pass
+
+from kivy.factory import Factory
+Factory.register('FrescoServerLayout', cls=FrescoServerLayout)
 
 
 class FrescoServer(KalScenarioServer):
@@ -77,8 +80,9 @@ class FrescoServer(KalScenarioServer):
         self.state = 'waitready'
 
     def init_ui(self):
-        self.layout = FloatLayout()
-        self.fresco = Fresco(server=True)
+        self.layout = FrescoServerLayout()
+        self.fresco = Fresco(server=True, size_hint=(.8, .8),
+                pos_hint={'x': .1, 'y': .1})
         self.layout.add_widget(self.fresco)
         self.controler.app.show(self.layout)
 
@@ -106,16 +110,15 @@ class FrescoServer(KalScenarioServer):
             break
         if thumb is None:
             thumb = self.fresco.get_thumb(index)
+            place = int(self.players[client]['place']) - 1
+            thumb.color = map(lambda x: x / 255., fresco_colors[place])
         if date == -1:
             if thumb.parent is not None:
-                print 'REMOVE THUMB'
                 thumb.parent.remove_widget(thumb)
         else:
             if thumb.parent is None:
-                print 'ADD THUMB'
-                self.layout.add_widget(thumb)
+                self.layout.add_widget(thumb, -1)
             self.fresco.set_pos_by_date(thumb, date)
-        print thumb.item['title'], thumb.pos, thumb.size
 
     #
     # State machine
@@ -145,7 +148,6 @@ class FrescoServer(KalScenarioServer):
         litems = len(self.fresco.data)
         if litems:
             r = range(litems)
-            print 'range of', r
             allfinished = False
             while not allfinished:
                 allfinished = True

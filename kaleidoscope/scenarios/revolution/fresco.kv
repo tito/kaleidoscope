@@ -160,3 +160,12 @@
 				size_hint_y: None
 				height: self.texture_size[1]
 
+<FrescoServerLayout>:
+
+	canvas.before:
+		Color:
+			rgb: 1, 1, 1
+		Rectangle:
+			size: self.size
+			pos: self.pos
+			source: 'background.png'

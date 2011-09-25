@@ -112,10 +112,39 @@ class Fresco(Widget):
         self.data = data['items']
 
     def set_pos_by_date(self, thumb, date):
+        thumb.size = (240, 140)
         date -= self.date_start
         date /= float(self.date_end) - float(self.date_start)
         date *= self.width
-        thumb.center = date - 64, self.center_y
+
+        thumb.center_x = self.x + date
+        if thumb.y == 0:
+            thumb.center_y = self.center_y
+            thumb.real_center_y = self.center_y
+
+        self.update_thumbs_y()
+
+    def update_thumbs_y(self):
+        index = -1
+        for thumb in self.parent.children:
+            if not isinstance(thumb, FrescoThumbnail):
+                continue
+            index += 1
+            i = index % 4
+            if i == 0:
+                delta = -120
+            elif i == 1:
+                delta = -260
+            elif i == 2:
+                delta = 120
+            else:
+                delta = 260
+            center_y = self.center_y + delta
+            if thumb.real_center_y == center_y:
+                continue
+            thumb.real_center_y = center_y
+            Animation(center_y=center_y, t='out_elastic').start(thumb)
+
 
     def get_thumb(self, index):
         item = self.data[index]
