@@ -129,6 +129,7 @@ class Choose(KalScenarioServer):
         # a client just ask for a place.
         # is the place is available ?
         place = args[0]
+        print 'PLACE IS', args
         self.players[client]['place'] = int(place)
         self.controler.metadata[client] = {'place': int(place)}
         self.send_remaining_places()

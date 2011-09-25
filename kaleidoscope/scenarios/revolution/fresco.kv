@@ -4,10 +4,79 @@
 	do_scale: False
 	do_rotation: False
 	size_hint: (None, None)
-	size: (128, 128)
+	size: (240, 140 if self.have_date else 100)
+	length_flag: (root.fresco.center_y - self.center_y)
 
-	Image:
-		source: root.item.get('thumbnail', '')
+	canvas:
+		Color:
+			rgba: self.color + [int(self.have_date)]
+		BorderImage:
+			size: 24, abs(self.length_flag)
+			pos: self.width / 2. - 12, self.height / 2. + (self.length_flag if self.length_flag < -1 else 0)
+			border: (24, 1, 24, 1)
+			source: 'flag_down.png' if self.length_flag > 0 else 'flag_up.png'
+		Color:
+			rgb: self.color
+		BorderImage:
+			size: root.size
+			source: 'roundrect.png'
+
+	Label:
+		font_name: 'Georgia_Italic.ttf'
+		font_size: 16
+		color: (.3, .3, .3, .7)
+		text_size: self.width - 20, self.height - 20
+		size: root.width, 100
+		halign: 'left'
+		valign: 'middle'
+		text: root.item.get('title')
+		x: 1
+		y: 39 if root.have_date else -1
+
+	Label:
+		font_name: 'Georgia_Italic.ttf'
+		font_size: 16
+		color: (1, 1, 1, 1)
+		text_size: self.width - 20, self.height - 20
+		size: root.width, 100
+		halign: 'left'
+		valign: 'middle'
+		text: root.item.get('title')
+		y: 40 if root.have_date else 0
+
+	Label:
+		text: root.str_date
+		font_name: 'Georgia_Italic.ttf'
+		font_size: 16
+		color: (.4, .4, .4, .7)
+		text_size: self.width - 20, self.height
+		size: root.width, 40
+		halign: 'left'
+		valign: 'middle'
+		y: 9
+		x: 1
+
+	Label:
+		text: root.str_date
+		font_name: 'Georgia_Italic.ttf'
+		font_size: 16
+		color: (.05, .05, .05, 1)
+		text_size: self.width - 20, self.height
+		size: root.width, 40
+		halign: 'left'
+		valign: 'middle'
+		y: 10
+
+<FrescoEmptyPlace>:
+	size_hint: (None, None)
+	canvas:
+		Color:
+			rgba: (1, 1, 1, 1)
+		BorderImage:
+			size: root.size
+			pos: root.pos
+			source: 'freeplace.png'
+			border: (32, 32, 32, 32)
 
 <FrescoClientLayout>:
 	fresco: fresco
@@ -19,10 +88,52 @@
 			size: self.size
 			pos: self.pos
 			source: 'background.png'
+		Color:
+			rgb: 0, 0, 0
+		Rectangle:
+			pos: 10, self.top - 10 - 64
+			size: 64, 64
+			source: root.logo + '_enable.png'
+
+		# XXX dont duplicate image to make it darker >_<
+		Rectangle:
+			pos: 10, self.top - 10 - 64
+			size: 64, 64
+			source: root.logo + '_enable.png'
+
+	Label:
+		size_hint: (None, None)
+		font_size: 43
+		height: 43
+		y: root.top - 10 - 32 - 22
+		x: 90
+		color: (.05, .05, .05, .6)
+		text: str(int(root.time)) + '"'
+		font_name: 'data/fonts/DroidSans-Bold.ttf'
+
+	Label:
+		size_hint: (None, None)
+		font_size: 43
+		height: 43
+		y: root.top - 10 - 32 - 22
+		x: 90
+		color: root.color + [1]
+		text: str(int(root.time)) + '"'
+		font_name: 'data/fonts/DroidSans-Bold.ttf'
+
+		canvas.before:
+			StencilPush
+			Rectangle:
+				pos: self.pos
+				size: self.width, self.height * (1 - (root.time / float(root.timelimit)))
+			StencilUse
+
+		canvas.after:
+			StencilPop
 
 	BoxLayout:
-		size_hint: (1, .6)
-		pos_hint: {'y': .4}
+		size_hint: (1, .7)
+		pos_hint: {'y': .3}
 		padding: 50
 		Fresco:
 			id: fresco

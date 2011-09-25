@@ -170,6 +170,7 @@ class KalClientChannel(asynchat.async_chat):
         if self.require != 0:
             self.push('STATUS still %s files to download\n' % self.require)
         else:
+            self.ui.status(u'Construction de l\'interface...')
             self.push('STATUS loading\n')
             try:
                 self.scenarioname = args

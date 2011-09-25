@@ -20,6 +20,10 @@ background = Image(join(dirname(__file__), 'background.png'))
 background.texture.wrap = 'repeat'
 btnbg = Image(join(dirname(__file__), 'buttonbackground.png')).texture
 
+fresco_colors = ((227, 53, 119), (92, 145, 179), (92, 179, 103), (194, 222, 65))
+fresco_logos = ('ying', 'plane', 'umbrella', 'horse')
+
+
 class FrescoServer(KalScenarioServer):
     def search_data_files(self):
         blacklist = ('__init__.py', )
@@ -43,14 +47,9 @@ class FrescoServer(KalScenarioServer):
         resource_add_path(dirname(__file__))
         Builder.load_file(join(dirname(__file__), 'fresco.kv'))
 
-        print 'sync', self.resources
         super(FrescoServer, self).__init__(*largs)
         self.timeout = 0
         self.timemsg = 0
-        self.c1 = get_color_from_hex('#96be25aa')
-        self.c2 = get_color_from_hex('#e6461faa')
-        self.c3 = get_color_from_hex('#81cac8aa')
-        self.c4 = get_color_from_hex('#7f398baa')
         self.players = {}
 
         # init client table
@@ -63,28 +62,6 @@ class FrescoServer(KalScenarioServer):
                 'place': self.controler.metadata[client]['place'],
                 'count': 0
             }
-
-    def build_canvas(self, canvas):
-        places = [player['place'] for player in self.players.itervalues()]
-        canvas.before.clear()
-        with canvas.before:
-            Color(1, 1, 1)
-            cx, cy = Window.center
-            m = 50
-            m2 = m * 2
-            if 1 in places:
-                Color(*self.c1)
-                BorderImage(texture=btnbg, pos=(m, m), size=(cx - m2, cy - m2), radius=15)
-            if 2 in places:
-                Color(*self.c2)
-                BorderImage(texture=btnbg, pos=(cx + m, m), size=(cx - m2, cy - m2), radius=15)
-            if 3 in places:
-                Color(*self.c3)
-                BorderImage(texture=btnbg, pos=(m, cy + m), size=(cx - m2, cy - m2), radius=15)
-            if 4 in places:
-                Color(*self.c4)
-                BorderImage(texture=btnbg, pos=(cx + m, cy + m), size=(cx - m2, cy - m2), radius=15)
-
 
     def client_login(self, client):
         self.players[client]['ready'] = True
@@ -155,8 +132,14 @@ class FrescoServer(KalScenarioServer):
 
         self.timeout = time() + TIMER
         self.send_all('GAME1')
+        self.send_all('TIME %d %d' % (time(), int(self.timeout)))
         self.state = 'game1'
         self.init_ui()
+
+        for client in self.controler.clients:
+            place = int(self.players[client]['place']) - 1
+            self.send_to(client, 'COLOR %d %d %d' % fresco_colors[place])
+            self.send_to(client, 'LOGO %s' % fresco_logos[place])
 
         # deliver randomly index
         litems = len(self.fresco.data)
@@ -184,7 +167,6 @@ class FrescoServer(KalScenarioServer):
         if time() > self.timeout:
             self.state = 'reset_for_game2'
             return
-        self.send_all('TIME %d' % int(self.timeout))
 
     def run_reset_for_game2(self):
         '''Order fresco !
@@ -192,14 +174,14 @@ class FrescoServer(KalScenarioServer):
         # do game 2
         self.send_all('ORDER')
         self.timeout = time() + TIMER
-        self.send_all('TIME %d' % int(self.timeout))
+        self.send_all('TIME %d %d' % (time(), int(self.timeout)))
 
     def run_game2(self):
         if time() > self.timeout:
             self.msg_all('Fin du jeu !')
             self.state = 'game3'
             self.timeout = time() + 5
-            self.send_all('TIME %d' % int(self.timeout))
+            self.send_all('TIME %d %d' % (time(), int(self.timeout)))
             return
 
     def run_game3(self):

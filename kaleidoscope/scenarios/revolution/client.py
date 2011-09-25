@@ -1,23 +1,11 @@
-from random import random, randint
 from os.path import join, dirname
 from time import time
 
 from kaleidoscope.scenario import KalScenarioClient
 
-from kivy.core.window import Window
-from kivy.core.image import Image
-from kivy.uix.widget import Widget
-from kivy.uix.label import Label
-from kivy.uix.scatter import Scatter
-from kivy.utils import get_color_from_hex
-from kivy.vector import Vector
-from kivy.animation import Animation
-from kivy.uix.anchorlayout import AnchorLayout
-from kivy.properties import StringProperty, NumericProperty
+from kivy.clock import Clock
 from kivy.resources import resource_add_path
 from kivy.lang import Builder
-from kivy.graphics import Color, Rectangle, Ellipse
-from kivy.clock import Clock
 
 from fresco_common import FrescoClientLayout
 
@@ -29,8 +17,9 @@ class FrescoClient(KalScenarioClient):
         super(FrescoClient, self).__init__(*largs)
         self.count = 0
         self.timeout = 0
-        self.timeoutl = .1
         self.layout = None
+        self.logo = ''
+        Clock.schedule_interval(self.update_graphics_timer, 1 / 10.)
 
     def handle_clear(self, args):
         pass
@@ -39,8 +28,20 @@ class FrescoClient(KalScenarioClient):
         pass
 
     def handle_time(self, args):
-        self.timeout = int(args)
-        self.timeoutl = self.timeout - time()
+        self.timedelta, self.timeout = map(int, args.split())
+        print 'time is', time(), self.timedelta
+        self.timedelta = time() - self.timedelta
+        print 'calculated timedelta', self.timedelta
+        # apply that delta to timeout
+        self.timeout += self.timedelta
+        self.timelimit = self.timeout - time() 
+        print 'time limit is', self.timelimit
+
+    def handle_color(self, args):
+        self.layout.color = map(lambda x: int(x) / 255., args.split())
+
+    def handle_logo(self, args):
+        self.layout.logo = args
 
     def handle_game1(self, args):
         self.layout = FrescoClientLayout()
@@ -52,15 +53,22 @@ class FrescoClient(KalScenarioClient):
         # create thumbnail in the gridlayout
         self.count += 1
         index = int(args)
-        item = self.fresco.get_thumb(index)
+        item = self.layout.create_and_add_item(index)
         item.bind(date=self.send_date)
-        item.pos = (100 + self.count * 150, 100)
-        self.layout.add_widget(item)
 
     def send_date(self, instance, value):
         if value is None:
             value = -1
         self.send('POS %d %d' % (instance.index, value))
+
+    def update_graphics_timer(self, dt):
+        if not self.layout:
+            return
+        t = self.timeout - time()
+        if t < 0:
+            t = 0
+        self.layout.time = t
+        self.layout.timelimit = self.timelimit
 
 
 
