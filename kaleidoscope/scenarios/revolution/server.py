@@ -214,7 +214,7 @@ class FrescoServer(KalScenarioServer):
         for client, index in self.items_given:
             if index in index_sent:
                 continue
-            self.send_to(client, 'THINVALID %d' % index)
+            self.send_to(client, 'THNOTVALID %d' % index)
 
         # do game 2
         self.timeout = time() + TIMER_2
