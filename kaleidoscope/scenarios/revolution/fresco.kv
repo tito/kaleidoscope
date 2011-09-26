@@ -80,6 +80,7 @@
 
 <FrescoClientLayout>:
 	fresco: fresco
+	inner_layout: inner_layout
 
 	canvas.before:
 		Color:
@@ -132,6 +133,7 @@
 			StencilPop
 
 	BoxLayout:
+		id: inner_layout
 		size_hint: (1, .7)
 		pos_hint: {'y': .3}
 		padding: 50
@@ -139,26 +141,25 @@
 			id: fresco
 
 <FrescoDescription>:
+	layout: layout
+
 	ScrollView:
 		pos: root.pos
-		size: root.size
-		do_scroll_x: False
+		size: root.width, root.height - 50
+		do_scroll_x: True
 		GridLayout:
-			cols: 1
-			size_hint_y: None
-			orientation: 'vertical'
+			rows: 1
+			cols: 2
+			size_hint: (1, None)
 			padding: 10
 			spacing: 10
-			Image:
-				source: root.item.get('media', '')
-				size_hint_y: None
-				height: 0 if self.source == '' else 250
+			id: layout
 
-			Label:
-				text: root.item.get('content', '')
-				text_size: self.width, None
-				size_hint_y: None
-				height: self.texture_size[1]
+	Button:
+		size_hint: (None, None)
+		size: (100, 40)
+		text: '<< Retour'
+		pos: root.x - 5, root.y - 50
 
 <FrescoServerLayout>:
 
@@ -169,3 +170,14 @@
 			size: self.size
 			pos: self.pos
 			source: 'background.png'
+
+<FrescoAudio>:
+	AnchorLayout:
+		pos: root.x, root.y + 50
+		size_hint: (None, None)
+		size: root.width, root.height - 50
+		Button:
+			size_hint: (None, None)
+			size: (200, 100)
+			text: 'Lire le fichier audio'
+			on_release: root.play_audio()

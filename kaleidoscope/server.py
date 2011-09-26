@@ -46,6 +46,11 @@ class KalControler(object):
 
     def reset_game(self):
         self.scenarioname = 'choose'
+        try:
+            if self.scenario:
+                self.scenario.stop()
+        except Exception:
+            traceback.print_exc()
         self.scenario = None
         self.status = {}
 
@@ -229,6 +234,12 @@ class KalControler(object):
         self.clientcount = l
 
     def state_load(self):
+        try:
+            if self.scenario is not None:
+                self.scenario.stop()
+            self.scenario = None
+        except Exception, e:
+            traceback.print_exc()
         try:
             package = 'kaleidoscope.scenarios.%s' % self.scenarioname
             for x in sys.modules.keys()[:]:

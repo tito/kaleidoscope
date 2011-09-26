@@ -7,18 +7,30 @@ from kivy.core.image import Image
 from kivy.uix.floatlayout import FloatLayout
 from fresco_common import Fresco, FrescoThumbnail
 from random import randint
-from kivy.resources import resource_add_path
+from kivy.resources import resource_add_path, resource_remove_path
 from kivy.lang import Builder
 
-TIMER = 60 * 2
+TIMER_1 = 120
+TIMER_2 = 30
 MAX_CLIENT_ITEMS = 3
 
 background = Image(join(dirname(__file__), 'background.png'))
 background.texture.wrap = 'repeat'
 btnbg = Image(join(dirname(__file__), 'buttonbackground.png')).texture
 
-fresco_colors = ((227, 53, 119), (92, 145, 179), (92, 179, 103), (194, 222, 65))
-fresco_logos = ('ying', 'plane', 'umbrella', 'horse')
+# vert, jaune, bleu, rose
+fresco_colors = (
+    (92, 179, 103),
+    (194, 222, 65),
+    (92, 145, 179),
+    (227, 53, 119),
+)
+fresco_logos = (
+    'umbrella',
+    'horse',
+    'plane',
+    'ying',
+)
 
 class FrescoServerLayout(FloatLayout):
     pass
@@ -79,6 +91,10 @@ class FrescoServer(KalScenarioServer):
         self.send_all('WAITREADY')
         self.state = 'waitready'
 
+    def stop(self):
+        Builder.unload_file(join(dirname(__file__), 'fresco.kv'))
+        resource_remove_path(dirname(__file__))
+
     def init_ui(self):
         self.layout = FrescoServerLayout()
         self.fresco = Fresco(server=True, size_hint=(.8, .8),
@@ -99,7 +115,8 @@ class FrescoServer(KalScenarioServer):
                 self.players[client]['name'], count))
 
     def do_client_pos(self, client, args):
-        index, date = map(int, args)
+        index = int(args[0])
+        date = float(args[1])
         thumb = None
         for child in self.layout.children:
             if not isinstance(child, FrescoThumbnail):
@@ -110,6 +127,7 @@ class FrescoServer(KalScenarioServer):
             break
         if thumb is None:
             thumb = self.fresco.get_thumb(index)
+            thumb.client = client
             place = int(self.players[client]['place']) - 1
             thumb.color = map(lambda x: x / 255., fresco_colors[place])
         if date == -1:
@@ -133,11 +151,12 @@ class FrescoServer(KalScenarioServer):
         if not ready:
             return
 
-        self.timeout = time() + TIMER
+        self.timeout = time() + TIMER_1
         self.send_all('GAME1')
         self.send_all('TIME %d %d' % (time(), int(self.timeout)))
         self.state = 'game1'
         self.init_ui()
+        self.items_given = []
 
         for client in self.controler.clients:
             place = int(self.players[client]['place']) - 1
@@ -162,6 +181,7 @@ class FrescoServer(KalScenarioServer):
                     self.send_to(client, 'GIVE %d' % index)
                     allfinished = allfinished and False
                     player['count'] += 1
+                    self.items_given.append((client, index))
 
     def run_game1(self):
         '''First game, place items on the fresco without ordering.
@@ -173,18 +193,45 @@ class FrescoServer(KalScenarioServer):
     def run_reset_for_game2(self):
         '''Order fresco !
         '''
+        self.send_all('GAME2')
+
+        # order !
+        index_sent = []
+        for thumb in self.layout.children:
+            if not isinstance(thumb, FrescoThumbnail):
+                continue
+
+            # are we far from now ?
+            realdate = thumb.item['date']
+            now = thumb.date
+            diff = abs(realdate - now)
+            if diff > self.fresco.date_allowed_offset:
+                self.send_to(thumb.client, 'THNOTVALID %d' % thumb.index)
+            else:
+                self.send_to(thumb.client, 'THVALID %d' % thumb.index)
+            index_sent.append(thumb.index)
+
+        for client, index in self.items_given:
+            if index in index_sent:
+                continue
+            self.send_to(client, 'THINVALID %d' % index)
+
         # do game 2
-        self.send_all('ORDER')
-        self.timeout = time() + TIMER
+        self.timeout = time() + TIMER_2
         self.send_all('TIME %d %d' % (time(), int(self.timeout)))
+        self.state = 'game2'
 
     def run_game2(self):
         if time() > self.timeout:
-            self.msg_all('Fin du jeu !')
-            self.state = 'game3'
-            self.timeout = time() + 5
-            self.send_all('TIME %d %d' % (time(), int(self.timeout)))
+            self.state = 'reset_for_game3'
             return
+
+    def run_reset_for_game3(self):
+        for client, index in self.items_given:
+            self.send_to(client, 'THVALID %d' % index)
+        self.state = 'game3'
+        self.timeout = time() + 15
+        self.send_all('TIME %d %d' % (time(), int(self.timeout)))
 
     def run_game3(self):
         if time() > self.timeout:

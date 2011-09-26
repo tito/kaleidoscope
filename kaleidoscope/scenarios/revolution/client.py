@@ -49,6 +49,9 @@ class FrescoClient(KalScenarioClient):
         self.container.clear_widgets()
         self.container.add_widget(self.layout)
 
+    def handle_game2(self, args):
+        self.layout.hide_places()
+
     def handle_give(self, args):
         # create thumbnail in the gridlayout
         self.count += 1
@@ -56,10 +59,29 @@ class FrescoClient(KalScenarioClient):
         item = self.layout.create_and_add_item(index)
         item.bind(date=self.send_date)
 
+    def handle_thnotvalid(self, args):
+        index = int(args)
+        thumb = self.layout.get_thumb_from_index(index)
+        if not thumb:
+            return
+        thumb.auto_color = True
+        thumb.update_color()
+
+    def handle_thvalid(self, args):
+        index = int(args)
+        thumb = self.layout.get_thumb_from_index(index)
+        if not thumb:
+            return
+        self.fresco.set_pos_by_date(thumb, thumb.item['date'], True)
+        thumb.auto_color = True
+        thumb.update_color()
+        thumb.do_translation = False
+
+
     def send_date(self, instance, value):
         if value is None:
             value = -1
-        self.send('POS %d %d' % (instance.index, value))
+        self.send('POS %d %f' % (instance.index, value))
 
     def update_graphics_timer(self, dt):
         if not self.layout:

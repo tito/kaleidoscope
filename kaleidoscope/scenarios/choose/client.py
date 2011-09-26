@@ -118,7 +118,7 @@ class ChooseClient(KalScenarioClient):
         cx, cy = Window.center
         self.container.clear_widgets()
         self.container.add_widget(
-            ChooseLabel(text=u'Cliques lorsque tous les joueurs ont une place',
+            ChooseLabel(text=u'Clique lorsque tout le monde a une place',
                     pos=(0, cy + 200),
                     size=(Window.width, 100)
         ))
