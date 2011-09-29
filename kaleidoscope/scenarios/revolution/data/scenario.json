@@ -1,11 +1,11 @@
 {
-	"date_start": 1750,
-	"date_end": 1810,
-	"date_step": 10,
-	"date_allowed_offset": 10,
+	"date_start": 1788,
+	"date_end": 1805,
+	"date_step": 2,
+	"date_allowed_offset": 1,
 	"items": [
 		{
-			"title": "Le segment du jeu de Paume",
+			"title": "Le serment du jeu de Paume",
 			"date": 1789.0620,
 			"date_str": "20 juin 1789",
 			"media": "sermentjeupaume.jpg",
@@ -53,17 +53,42 @@
 			"media": "exelouisxvi.jpg",
 			"content": ""
 		},{
+			"title": "Arrestation des Girondins",
+			"date": 1793.0602,
+			"date_str": "2 juin 1793",
+			"media": "",
+			"content": "Arrestation des Girondins, trop modérés pour les sans-culottes."
+		},{
 			"title": "Exécution de Marie-Antoinette d’Autriche",
 			"date": 1793.1016,
 			"date_str": "16 septembre 1793",
 			"media": "exemarieantoinette.jpg",
 			"content": ""
 		},{
+			"title": "Exécution de Robespierre",
+			"date": 1794.0727,
+			"date_str": "27 juillet 1794",
+			"media": "",
+			"content": "Le 9 Thermidor An II, Robespierre est arrêté et guillotiné."
+		},{
+			"title": "Constitution de l'an III",
+			"date": 1795.0822,
+			"date_str": "22 août 1795",
+			"media": "",
+			"content": "La constitution de l'an III fonde le Directoire. Elle rétablit le suffrage censitaire et installe le pouvoir des 5 Directeurs."
+		},{
+			"title": "Coup d'état de Bonaparte",
+			"date": 1799.1109,
+			"date_str": "9 novembre 1799",
+			"media": "",
+			"content": "Coup d'Etat des 18-19 Brumaire An VIII par Bonaparte."
+		},
+		{
 			"title": "Napoléon 1er devient Empereur des Français",
 			"date": 1804.0518,
 			"date_str": "18 mai 1804",
 			"media": "sacrenapoleon1.jpg",
-"content": "Le sacre impérial, événement unique dans l’Histoire de France, représenté sur le tableau de Jacques-Louis David, Le Sacre de Napoléon, est lourdement chargé en symboles. Le passage de la République à l’Empire nécessite la création d’armoiries impériales, ainsi que la création d’objets symboliques destinés à établir une tradition auparavant inexistante. Napoléon, qui se veut rassembleur, décide d’associer aux symboles de son règne les images qui ont pu représenter auparavant la France, ainsi que les pouvoirs forts européens.\nL’aigle est choisi en référence aux aigles romaines, portées par les légions, mais il est également le symbole de Charlemagne, l’aigle éployée. C’est d’ailleurs une erreur de lecture qui donnera pour symbole de l’Empire français un aigle aux ailes déployées : en héraldique, éployée se dit des oiseaux et des animaux chimériques représentés avec les ailes étendues (un aigle à deux têtes aux ailes déployées en est un bon exemple). La couleur rouge du manteau impérial est une référence directe à la pourpre de l’imperium romain. Napoléon se pose ainsi en héritier de l’Empire romain et de Charlemagne.\nLes abeilles sont censées rappeler les Mérovingiens (des broches les représentant ayant été retrouvées dans des tombeaux de cette époque), et leur disposition sur les armoiries et le manteau impérial doit rappeler les fleurs de lys des Capétiens. La main de justice, utilisée par les Capétiens lors des sacres royaux, doit faire apparaître que l'Empereur est l’héritier de leur pouvoir. Napoléon veut montrer qu’il est le fondateur de la « quatrième dynastie », celle des Bonaparte, après lesMérovingiens, les Carolingiens, et les Capétiens. D’autres symboles utilisés pendant le sacre sont chargés de valeurs morales. Ainsi Napoléon tient-il un moment le globe de Charlemagne ; il porte la couronne de ce même empereur (ces deux éléments ayant été forgés de toutes pièces avant le sacre). Son épée et son sceptre sont dits « de Charlemagne » : ils ont été en réalité utilisés depuis plusieurs siècles par les Valois puis les Bourbons lors de leurs sacres."
+"content": "Le sacre impérial, événement unique dans l’Histoire de France, représenté sur le tableau de Jacques-Louis David, Le Sacre de Napoléon, est lourdement chargé en symboles. Le passage de la République à l’Empire nécessite la création d’armoiries impériales, ainsi que la création d’objets symboliques destinés à établir une tradition auparavant inexistante. Napoléon, qui se veut rassembleur, décide d’associer aux symboles de son règne les images qui ont pu représenter auparavant la France, ainsi que les pouvoirs forts européens.\nL’aigle est choisi en référence aux aigles romaines, portées par les légions, mais il est également le symbole de Charlemagne, l’aigle éployée. La couleur rouge du manteau impérial est une référence directe à la pourpre de l’imperium romain. Napoléon se pose ainsi en héritier de l’Empire romain et de Charlemagne.\nLes abeilles sont censées rappeler les Mérovingiens, et leur disposition sur les armoiries et le manteau impérial doit rappeler les fleurs de lys des Capétiens. La main de justice, utilisée par les Capétiens lors des sacres royaux, doit faire apparaître que l'Empereur est l’héritier de leur pouvoir. Napoléon veut montrer qu’il est le fondateur de la « quatrième dynastie », celle des Bonaparte, après les Mérovingiens, les Carolingiens, et les Capétiens. D’autres symboles utilisés pendant le sacre sont chargés de valeurs morales. Ainsi Napoléon tient-il un moment le globe de Charlemagne ; il porte la couronne de ce même empereur. Son épée et son sceptre sont dits « de Charlemagne » : ils ont été en réalité utilisés depuis plusieurs siècles par les Valois puis les Bourbons lors de leurs sacres."
 		}
 	]
 }
