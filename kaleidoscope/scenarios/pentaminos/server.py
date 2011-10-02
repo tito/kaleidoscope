@@ -151,6 +151,12 @@ class Pentaminos(KalScenarioServer):
         if not ready:
             return
 
+        # adjust number of pentaminos to do per player
+        global PENTAMINOS_COUNT_BY_USERS
+        assert(len(self.players) > 0)
+        assert(len(self.players) <= 4)
+        PENTAMINOS_COUNT_BY_USERS = 12 / len(self.players)
+
         self.timeout = time() + TIMER
         self.msg_all('Construis %d pentaminos' % PENTAMINOS_COUNT_BY_USERS)
         self.send_all('TIME %d' % int(self.timeout))
