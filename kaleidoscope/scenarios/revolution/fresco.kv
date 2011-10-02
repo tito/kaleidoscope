@@ -22,29 +22,6 @@
 			source: 'roundrect.png'
 
 	Label:
-		font_name: 'Georgia_Italic.ttf'
-		font_size: 16
-		color: (.3, .3, .3, .7)
-		text_size: self.width - 20, self.height - 20
-		size: root.width, 100
-		halign: 'left'
-		valign: 'middle'
-		text: root.item.get('title')
-		x: 1
-		y: 39 if root.have_date else -1
-
-	Label:
-		font_name: 'Georgia_Italic.ttf'
-		font_size: 16
-		color: (1, 1, 1, 1)
-		text_size: self.width - 20, self.height - 20
-		size: root.width, 100
-		halign: 'left'
-		valign: 'middle'
-		text: root.item.get('title')
-		y: 40 if root.have_date else 0
-
-	Label:
 		text: root.str_date
 		font_name: 'Georgia_Italic.ttf'
 		font_size: 16
@@ -53,7 +30,7 @@
 		size: root.width, 40
 		halign: 'left'
 		valign: 'middle'
-		y: 9
+		y: 100
 		x: 1
 
 	Label:
@@ -65,7 +42,28 @@
 		size: root.width, 40
 		halign: 'left'
 		valign: 'middle'
-		y: 10
+		y: 99
+
+	Label:
+		font_name: 'Georgia_Italic.ttf'
+		font_size: 16
+		color: (.3, .3, .3, .7)
+		text_size: self.width - 20, self.height - 20
+		size: root.width, 100
+		halign: 'left'
+		valign: 'middle'
+		text: root.item.get('title')
+		x: 1
+
+	Label:
+		font_name: 'Georgia_Italic.ttf'
+		font_size: 16
+		color: (1, 1, 1, 1)
+		text_size: self.width - 20, self.height - 20
+		size: root.width, 100
+		halign: 'left'
+		valign: 'middle'
+		text: root.item.get('title')
 
 <FrescoEmptyPlace>:
 	size_hint: (None, None)
