@@ -356,10 +356,10 @@ class FrescoClientLayout(FloatLayout):
         return thumb
 
     def do_layout_all(self):
-        self.do_layout(self.emptyplaces)
-        self.do_layout(self.items)
+        self.do_layout_items(self.emptyplaces)
+        self.do_layout_items(self.items)
 
-    def do_layout(self, items):
+    def do_layout_items(self, items):
         # place correctly thumbs
         if not items:
             return
