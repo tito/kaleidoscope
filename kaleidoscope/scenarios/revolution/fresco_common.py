@@ -75,9 +75,7 @@ class FrescoThumbnail(Scatter):
                 u'Juillet', u'Août', u'Septembre', u'Octobre', u'Novembre',
                 u'Décembre')
         self.date_alpha = self.fresco.get_alpha_from_realdate(value)
-        print 'date moved to alpha', value, self.date_alpha
         y, m = self.fresco.get_dateinfo_from_alpha(self.date_alpha)
-        print y, m
         self.str_date = u'%s %d' % (months[m-1], y)
 
         if self.auto_color:
@@ -242,7 +240,6 @@ class Fresco(Widget):
     def set_pos_by_alpha(self, thumb, date_alpha, animate=False):
         thumb.size = (240, 140)
         date = self.get_widgetdate_from_alpha(date_alpha)
-        print 'set_pos_by_alpha()', date_alpha, date, self.get_realdate_from_alpha(date_alpha)
 
         # convert widget date to widget position
         date -= self.date_start
@@ -261,11 +258,29 @@ class Fresco(Widget):
 
     def update_thumbs_y(self):
         index = -1
+        delta_table = {0:[], 1:[], 2:[], 3:[]}
         for thumb in self.parent.children:
             if not isinstance(thumb, FrescoThumbnail):
                 continue
             index += 1
-            i = index % 4
+
+            # search a place in delta table
+            found = None
+            deltas = [9999, 9999, 9999, 9999]
+            for index, items in delta_table.iteritems():
+                for item in items:
+                    delta = abs(thumb.center_x - item.center_x)
+                    deltas[index] = min(deltas[index], delta)
+                if deltas[index] > thumb.width:
+                    # use that index, size we got a place
+                    found = index
+                    break
+            if found is None:
+                # no index found, use the smallest one
+                delta = max(deltas)
+                found = deltas.index(delta)
+            i = found
+            delta_table[i].append(thumb)
             if i == 0:
                 delta = -120
             elif i == 1:
@@ -287,7 +302,6 @@ class Fresco(Widget):
 
     def get_alpha_from_realdate(self, value):
         r = int(value * 10000)
-        print '==>', value, r
         return r
 
     def get_dateinfo_from_alpha(self, value):
@@ -314,10 +328,8 @@ class Fresco(Widget):
         x += self.date_start 
         x *= 10000
         x = list(str(int(x)))
-        print 'get_date_from_pos()', x
         x[-2:] = '00'
         x[-4:-2] = '%02d' % (int(float(''.join(x[-4:-2])) * 0.12) + 1)
-        print 'get_date_from_pos()', x, y, x
         return self.get_realdate_from_alpha(int(''.join(x)))
 
     def set_date_by_alpha(self, thumb, alpha):

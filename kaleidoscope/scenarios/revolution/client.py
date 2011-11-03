@@ -29,13 +29,10 @@ class FrescoClient(KalScenarioClient):
 
     def handle_time(self, args):
         self.timedelta, self.timeout = map(int, args.split())
-        print 'time is', time(), self.timedelta
         self.timedelta = time() - self.timedelta
-        print 'calculated timedelta', self.timedelta
         # apply that delta to timeout
         self.timeout += self.timedelta
         self.timelimit = self.timeout - time() 
-        print 'time limit is', self.timelimit
 
     def handle_color(self, args):
         self.layout.color = map(lambda x: int(x) / 255., args.split())
@@ -72,7 +69,6 @@ class FrescoClient(KalScenarioClient):
         thumb = self.layout.get_thumb_from_index(index)
         if not thumb:
             return
-        print 'set thvalid', thumb.item['date']
         self.fresco.set_pos_by_date(thumb, thumb.item['date'])
         thumb.auto_color = True
         thumb.update_color()
