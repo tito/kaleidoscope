@@ -72,7 +72,8 @@ class FrescoClient(KalScenarioClient):
         thumb = self.layout.get_thumb_from_index(index)
         if not thumb:
             return
-        self.fresco.set_pos_by_date(thumb, thumb.item['date'], True)
+        print 'set thvalid', thumb.item['date']
+        self.fresco.set_pos_by_date(thumb, thumb.item['date'])
         thumb.auto_color = True
         thumb.update_color()
         thumb.do_translation = False
@@ -81,7 +82,7 @@ class FrescoClient(KalScenarioClient):
     def send_date(self, instance, value):
         if value is None:
             value = -1
-        self.send('POS %d %f' % (instance.index, value))
+        self.send('POS %d %.04f' % (instance.index, value))
 
     def update_graphics_timer(self, dt):
         if not self.layout:

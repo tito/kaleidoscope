@@ -136,7 +136,9 @@ class FrescoServer(KalScenarioServer):
         else:
             if thumb.parent is None:
                 self.layout.add_widget(thumb, -1)
-            self.fresco.set_pos_by_date(thumb, date)
+            alpha = self.fresco.get_alpha_from_realdate(date)
+            self.fresco.set_date_by_alpha(thumb, alpha)
+            self.fresco.set_pos_by_alpha(thumb, alpha)
 
     #
     # State machine

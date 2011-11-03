@@ -53,6 +53,7 @@ class FrescoThumbnail(Scatter):
     item = ObjectProperty(None)
     popup = ObjectProperty(None)
     date = NumericProperty(None, allownone=True)
+    date_alpha = NumericProperty(None, allownone=True)
     have_date = BooleanProperty(False)
     index = NumericProperty(-1)
     length_flag = NumericProperty(0)
@@ -60,6 +61,7 @@ class FrescoThumbnail(Scatter):
     str_date = StringProperty('')
     auto_color = BooleanProperty(False)
     place_correctly = BooleanProperty(False)
+    controled = BooleanProperty(False)
 
     # used by server, to know which client have this item
     client = ObjectProperty(None)
@@ -67,19 +69,23 @@ class FrescoThumbnail(Scatter):
     def on_date(self, instance, value):
         if value is None:
             self.str_date = ''
+            self.date_alpha = None
             return
         months = (u'Janvier', u'Février', u'Mars', u'Avril', u'Mai', u'Juin',
                 u'Juillet', u'Août', u'Septembre', u'Octobre', u'Novembre',
                 u'Décembre')
-        year = int(value)
-        value = (value - year) * 100
-        month = int(value / 9.09)
-        self.str_date = u'%s %d' % (months[month], year)
+        self.date_alpha = self.fresco.get_alpha_from_realdate(value)
+        print 'date moved to alpha', value, self.date_alpha
+        y, m = self.fresco.get_dateinfo_from_alpha(self.date_alpha)
+        print y, m
+        self.str_date = u'%s %d' % (months[m-1], y)
 
         if self.auto_color:
             self.update_color()
 
     def update_color(self):
+        if self.date is None:
+            return
         now = self.date
         real = self.item['date']
         offset = self.fresco.date_allowed_offset
@@ -96,7 +102,8 @@ class FrescoThumbnail(Scatter):
         self.color = color.rgba
 
     def on_center(self, instance, value):
-        self.date = self.fresco.get_date_from_pos(self.center_x, self.y + 60)
+        if self.client is None and self.controled:
+            self.date = self.fresco.get_date_from_pos(self.center_x, self.y + 60)
         have_date = self.date is not None
         if have_date != self.have_date:
             self.have_date = have_date
@@ -105,6 +112,7 @@ class FrescoThumbnail(Scatter):
         if not super(FrescoThumbnail, self).on_touch_down(touch):
             return
         Animation.stop_all(self, 'pos')
+        self.controled = True
         if touch.is_double_tap:
             self.show_popup()
         return True
@@ -115,7 +123,8 @@ class FrescoThumbnail(Scatter):
             if not self.have_date:
                 self.move_to_origin()
             if self.place_correctly:
-                self.fresco.set_pos_by_date(self, self.item['date'], True)
+                alpha_date = self.fresco.get_alpha_from_realdate(self.item['date'])
+                self.fresco.set_pos_by_alpha(self, alpha_date, True)
                 self.do_translation = False
         return ret
 
@@ -211,6 +220,12 @@ class Fresco(Widget):
 
     def set_pos_by_date(self, thumb, date, animate=False):
         thumb.size = (240, 140)
+        thumb.controled = False
+        thumb.date = date
+        alpha = self.get_alpha_from_realdate(date)
+        date = self.get_widgetdate_from_alpha(alpha)
+
+        # convert widget date to widget position
         date -= self.date_start
         date /= float(self.date_end) - float(self.date_start)
         date *= self.width
@@ -222,7 +237,26 @@ class Fresco(Widget):
         if thumb.y == 0:
             thumb.center_y = self.center_y
             thumb.real_center_y = self.center_y
+        self.update_thumbs_y()
 
+    def set_pos_by_alpha(self, thumb, date_alpha, animate=False):
+        thumb.size = (240, 140)
+        date = self.get_widgetdate_from_alpha(date_alpha)
+        print 'set_pos_by_alpha()', date_alpha, date, self.get_realdate_from_alpha(date_alpha)
+
+        # convert widget date to widget position
+        date -= self.date_start
+        date /= float(self.date_end) - float(self.date_start)
+        date *= self.width
+
+        thumb.center_x = self.x + date
+        if animate:
+            Animation(center_x=self.x + date, t='out_quad', d=.5).start(thumb)
+        else:
+            thumb.center_x = self.x + date
+        if thumb.y == 0:
+            thumb.center_y = self.center_y
+            thumb.real_center_y = self.center_y
         self.update_thumbs_y()
 
     def update_thumbs_y(self):
@@ -251,14 +285,43 @@ class Fresco(Widget):
         item = self.data[index]
         return FrescoThumbnail(item=item, fresco=self, index=index)
 
+    def get_alpha_from_realdate(self, value):
+        r = int(value * 10000)
+        print '==>', value, r
+        return r
+
+    def get_dateinfo_from_alpha(self, value):
+        # work on string
+        value = str(value)
+        return int(value[:-4]), int(value[-4:-2])
+
+    def get_realdate_from_alpha(self, alpha):
+        # return a real date (months goes from 1 to 12) from alpha
+        years, months = self.get_dateinfo_from_alpha(alpha)
+        return years + months / 100.
+
+    def get_widgetdate_from_alpha(self, alpha):
+        # return a widget date (months goes from 0 to 99)
+        years, months = self.get_dateinfo_from_alpha(alpha)
+        return years + (months - 1) / 0.12 / 100.
+
     def get_date_from_pos(self, x, y):
         if not self.collide_point(x, y):
             return
         x -= self.x
         x /= float(self.width)
         x *= (self.date_end - self.date_start)
-        x += self.date_start
-        return x
+        x += self.date_start 
+        x *= 10000
+        x = list(str(int(x)))
+        print 'get_date_from_pos()', x
+        x[-2:] = '00'
+        x[-4:-2] = '%02d' % (int(float(''.join(x[-4:-2])) * 0.12) + 1)
+        print 'get_date_from_pos()', x, y, x
+        return self.get_realdate_from_alpha(int(''.join(x)))
+
+    def set_date_by_alpha(self, thumb, alpha):
+        thumb.date = self.get_realdate_from_alpha(alpha)
 
     def build_canvas(self, dt):
 
