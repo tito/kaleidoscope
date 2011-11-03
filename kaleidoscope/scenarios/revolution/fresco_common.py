@@ -62,6 +62,7 @@ class FrescoThumbnail(Scatter):
     auto_color = BooleanProperty(False)
     place_correctly = BooleanProperty(False)
     controled = BooleanProperty(False)
+    real_center_y = NumericProperty(0)
 
     # used by server, to know which client have this item
     client = ObjectProperty(None)
@@ -259,7 +260,11 @@ class Fresco(Widget):
     def update_thumbs_y(self):
         index = -1
         delta_table = {0:[], 1:[], 2:[], 3:[]}
-        for thumb in self.parent.children:
+        if isinstance(self.parent.parent, FrescoClientLayout):
+            children = self.parent.parent.children
+        else:
+            children = self.parent.children
+        for thumb in children:
             if not isinstance(thumb, FrescoThumbnail):
                 continue
             index += 1
